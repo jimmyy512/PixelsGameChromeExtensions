@@ -45,6 +45,23 @@
         </el-col>
       </el-row>
     </template>
+
+    <el-row>
+      <el-col :span="12">
+        <el-button
+          type="success"
+          v-if="!IsAutoMake"
+          @click="
+            goMake();
+            IsAutoMake = true;
+          "
+          >開始自動製作
+        </el-button>
+        <el-button type="warning" v-if="IsAutoMake" @click="IsAutoMake = false"
+          >停止自動製作
+        </el-button>
+      </el-col>
+    </el-row>
   </div>
 </template>
 <script setup lang="ts">
@@ -76,7 +93,27 @@ const intervalEvent = setInterval(() => {
   nowTimestamp.value = Date.now();
 }, 1000);
 
+const intervalEvent2 = setInterval(() => {
+  if (IsAutoMake.value) {
+    goMake();
+  }
+}, 5000);
+
+let IsAutoMake = ref(false);
+
 const nowTimestamp = ref(Date.now());
+
+const goMake = () => {
+  inspectWindowEval(
+    `
+    window.goClick = () => {
+      document.querySelector(".Crafting_craftingButton__Qd6Ke").click();
+    };
+    window.goClick();
+    setTimeout(() => window.goClick(), 3000);
+`
+  );
+};
 
 const createTimeCountState = () => {
   const state = {} as Record<CountConfKey, CountData>;
@@ -143,15 +180,13 @@ onMounted(() => {
             .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
       }
-
-      console.warn('TimeCountState:', TimeCountState);
     });
   });
-  console.warn('asd2:', TimeCountState);
 });
 
 onBeforeUnmount(() => {
   clearInterval(intervalEvent);
+  clearInterval(intervalEvent2);
 });
 </script>
 
