@@ -1,5 +1,5 @@
 chrome.devtools.panels.create(
-  'MangoDev',
+  'PixelsGame',
   '',
   'src/devtools_page/devPanel.html',
   function (panel) {

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "水果開發工具",
-  "description": "方便RD除錯",
-  "version": "0.0.1",
+  "name": "Pixels腳本工具",
+  "description": "寶石賺滿滿",
+  "version": "1.0.0",
   "homepage_url": "https://github.com/elwin013/vitaly-extension",
   "action": {
     "default_popup": "src/popup/index.html",
@@ -44,9 +44,6 @@
     "activeTab",
     "webNavigation",
     "scripting",
-    "alarms",
-    "https://cloud.ljbcqa.site/plogin",
-    "https://cloud.ljbdev.site/plogin",
-    "https://qa-cloud.cloud-hub.co/*"
+    "alarms"
   ]
 }

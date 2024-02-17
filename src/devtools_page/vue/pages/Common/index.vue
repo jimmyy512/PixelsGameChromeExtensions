@@ -1,113 +1,157 @@
 <template>
   <div id="CommonPage">
-    <el-row align="middle" v-for="(item, index) in displayData" :key="index">
-      <el-col :span="12">
-        <div class="RowTitle">{{ item.title }}</div>
-      </el-col>
-      <el-col :span="12">
-        <div class="RowContent">{{ item.content }}</div>
-      </el-col>
-    </el-row>
-    <el-row align="middle">
-      <el-col :span="12">
-        <div class="RowTitle">PC API 解密</div>
-      </el-col>
-      <el-col :span="12">
-        <el-button type="success" @click="decryptHandler">點擊解密</el-button>
-      </el-col>
-    </el-row>
-    <!-- <el-row>
-      <el-col :span="12">
-        <el-button type="primary" @click="refresh">點擊刷新</el-button>
-      </el-col>
-    </el-row> -->
+    <template v-for="(item, key) in TimeCountState" :key="key">
+      <el-row align="middle">
+        <el-col :span="6">
+          <div class="RowTitle">{{ CountCONF[key].name }}採集</div>
+        </el-col>
+
+        <el-col :span="6">
+          <div class="resetBlock" @click="resetTime(key)">
+            計時重置
+            <el-icon><Refresh /></el-icon>
+          </div>
+        </el-col>
+
+        <el-col :span="12">
+          <template v-if="TimeCountState[key].EndTimeStamp === -1">
+            <el-button
+              type="success"
+              @click="startCountDown(key)"
+              v-if="!TimeCountState[key].IsTriggerStart"
+            >
+              開始計時
+            </el-button>
+            <el-button
+              type="warning"
+              @click="TimeCountState[key].IsTriggerStart = false"
+              v-if="TimeCountState[key].IsTriggerStart"
+            >
+              我知道了!
+            </el-button>
+          </template>
+          <template v-else>
+            <div
+              class="RowContent"
+              :style="
+                item.DiffSeconds < 180 && item.DiffSeconds >= 0
+                  ? 'color:#ec4747;'
+                  : ''
+              "
+            >
+              剩餘時間: {{ item.DisplayLabel }}
+            </div>
+          </template>
+        </el-col>
+      </el-row>
+    </template>
   </div>
 </template>
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, onBeforeUnmount } from 'vue';
+import {
+  computed,
+  onMounted,
+  onUnmounted,
+  onBeforeUnmount,
+  reactive,
+  ref,
+  watchEffect,
+} from 'vue';
+
 import { useConf } from '@/store';
 import { ElMessage } from 'element-plus';
+import { Refresh, Message } from '@element-plus/icons-vue';
 import { inspectWindowEval } from '@/utils/utils';
+import { CountCONF, CountConfKey } from '@/conf/index';
 
-const { isPC, conf } = useConf();
+interface CountData {
+  Stage: number;
+  EndTimeStamp: number;
+  DisplayLabel: string;
+  DiffSeconds: number;
+  IsTriggerStart: boolean;
+}
 
-const displayData = computed(() => [
-  { title: '環境', content: conf.appEnvStr },
-  { title: '版本號', content: conf.gameVer },
-  { title: '渠道號(參考)', content: conf.channelID },
-  { title: 'AgentID(參考)', content: conf.agentID },
-  { title: '皮膚ID', content: conf.resId },
-]);
+const intervalEvent = setInterval(() => {
+  nowTimestamp.value = Date.now();
+}, 1000);
 
-const decryptHandler = () => {
-  let decryptCommand: string;
+const nowTimestamp = ref(Date.now());
 
-  if (isPC) {
-    decryptCommand = '救救我哆啦A夢.call_setIsSecret(false)';
-  } else {
-    decryptCommand = 'getApp().$conf.debug = true';
-  }
-
-  chrome.devtools.inspectedWindow.eval(
-    decryptCommand,
-    (result, isException) => {
-      chrome.devtools.inspectedWindow.eval(
-        'location.reload()',
-        (result, isException) => {
-          ElMessage({
-            message: '解密成功,請查看 Network',
-            type: 'success',
-          });
-        }
-      );
+const createTimeCountState = () => {
+  const state = {} as Record<CountConfKey, CountData>;
+  for (const key in CountCONF) {
+    if (Object.prototype.hasOwnProperty.call(CountCONF, key)) {
+      state[key as CountConfKey] = {
+        Stage: 0,
+        EndTimeStamp: -1,
+        DisplayLabel: '',
+        DiffSeconds: -1,
+        IsTriggerStart: false,
+      };
     }
-  );
+  }
+  return state;
 };
 
-const onSelectionChangedHandler = async () => {
-  let host = await inspectWindowEval('location.hostname');
+const startCountDown = (typeKey: CountConfKey) => {
+  let time = Date.now();
+  let countDownTime = CountCONF[typeKey].CountDown[0];
+  TimeCountState[typeKey].EndTimeStamp = time + countDownTime * 1000;
+  TimeCountState[typeKey].IsTriggerStart = true;
+  saveData();
+};
 
-  // 只有 localhost 才能讀取vue檔案路徑
-  if (host !== 'localhost') {
-    return;
-  }
-  chrome.devtools.inspectedWindow.eval(
-    'JSON.stringify(Object.keys(inspect($0).dataset))',
-    function (result: any, isException) {
-      if (!isException) {
-        let resArr = JSON.parse(result);
+const saveData = () => {
+  chrome.storage.local.set({ NoteState: TimeCountState });
+};
 
-        // 正则表达式模式，匹配"v"或"v-"
-        const pattern = /^(v-|v)/;
+const resetTime = (resetKey: CountConfKey) => {
+  TimeCountState[resetKey].EndTimeStamp = -1;
+  TimeCountState[resetKey].IsTriggerStart = false;
+};
 
-        let filteredStrings = resArr.map(function (str: string) {
-          return str.replace(pattern, '');
-        });
-        if (filteredStrings.length !== 0) {
-          const dataSet = filteredStrings[0].toLowerCase();
-          chrome.devtools.inspectedWindow.eval(
-            `window.__VUE_HOT_MAP__['${dataSet}'].options.__file`,
-            function (result, isException) {
-              chrome.devtools.inspectedWindow.eval(
-                `console.warn("Extension - vue component path:",'${result}')`,
-                () => {}
-              );
-            }
-          );
-        }
+let TimeCountState: Record<CountConfKey, CountData> = reactive(
+  {} as Record<CountConfKey, CountData>
+);
+onMounted(() => {
+  chrome.storage.local.get('NoteState', result => {
+    const newState = result.NoteState
+      ? result.NoteState
+      : createTimeCountState();
+    for (const key in newState) {
+      if (newState.hasOwnProperty(key)) {
+        TimeCountState[key as CountConfKey] = newState[key];
       }
     }
-  );
-};
 
-chrome.devtools.panels.elements.onSelectionChanged.addListener(
-  onSelectionChangedHandler
-);
+    console.warn('asd', JSON.stringify(result.NoteState));
+
+    watchEffect(() => {
+      for (const key in TimeCountState) {
+        let item = TimeCountState[key as keyof typeof TimeCountState];
+        let diffTime = item.EndTimeStamp - nowTimestamp.value;
+        item.DiffSeconds = Math.floor(diffTime / 1000);
+        if (diffTime < 0) {
+          item.EndTimeStamp = -1;
+        } else {
+          const hours = Math.floor(diffTime / 1000 / 60 / 60);
+          const minutes = Math.floor((diffTime / 1000 / 60) % 60);
+          const seconds = Math.floor((diffTime / 1000) % 60);
+          item.DisplayLabel = `${hours.toString().padStart(2, '0')}:${minutes
+            .toString()
+            .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+      }
+
+      console.warn('TimeCountState:', TimeCountState);
+    });
+  });
+  console.warn('asd2:', TimeCountState);
+});
 
 onBeforeUnmount(() => {
-  chrome.devtools.panels.elements.onSelectionChanged.removeListener(
-    onSelectionChangedHandler
-  );
+  clearInterval(intervalEvent);
 });
 </script>
 
@@ -125,6 +169,15 @@ onBeforeUnmount(() => {
   }
   .el-row {
     margin-bottom: 20px;
+  }
+
+  .resetBlock {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    &:hover {
+      color: white;
+    }
   }
 }
 </style>

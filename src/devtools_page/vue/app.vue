@@ -76,39 +76,34 @@ const tabs = [
     // component: defineAsyncComponent(() => import('@/pages/Common/index.vue')),
     component: Common,
   },
-  {
-    label: 'WebSocket監控',
-    name: 'WebsocketMonitor',
-    // component: defineAsyncComponent(
-    //   () => import('@/pages/WebsocketMonitor/index.vue')
-    component: WebsocketMonitor,
-  },
-  {
-    label: '後台頁面',
-    name: 'backstage',
-    // component: defineAsyncComponent(
-    //   () => import('@/pages/Backstage/index.vue')
-    // ),
-    component: Backstage,
-  },
+  // {
+  //   label: 'WebSocket監控',
+  //   name: 'WebsocketMonitor',
+
+  //   component: WebsocketMonitor,
+  // },
+  // {
+  //   label: '後台頁面',
+  //   name: 'backstage',
+
+  //   component: Backstage,
+  // },
   // {
   //   label: 'Elastic',
   //   name: 'Elastic',
-  //   // component: defineAsyncComponent(
-  //   //   () => import('@/pages/Backstage/index.vue')
-  //   // ),
+
   //   component: Elastic,
   // },
-  {
-    label: '開發筆記',
-    name: 'Note',
-    component: Note,
-  },
-  {
-    label: '關於版本',
-    name: 'AboutUs',
-    component: AboutUs,
-  },
+  // {
+  //   label: '開發筆記',
+  //   name: 'Note',
+  //   component: Note,
+  // },
+  // {
+  //   label: '關於版本',
+  //   name: 'AboutUs',
+  //   component: AboutUs,
+  // },
 ];
 </script>
 
