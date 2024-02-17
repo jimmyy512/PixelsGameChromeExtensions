@@ -1,0 +1,17 @@
+
+
+@forward "element-plus/theme-chalk/src/common/var.scss" with (
+  $colors: (
+    "primary": (
+      "base": rgb(66, 185, 131), // 客製化主題色
+    ),
+  ),
+  $text-color: (
+    "primary": rgb(255, 255, 255),
+    
+  ),
+);
+
+@import "element-plus/theme-chalk/src/index.scss";
+
+

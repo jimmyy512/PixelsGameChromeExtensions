@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "strict": true,
+    "jsx": "preserve",
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "lib": ["ESNext", "DOM"],
+    "skipLibCheck": true,
+    "composite": true,
+    "allowSyntheticDefaultImports": true,
+    // ↓解析非相对模块名的基准目录。查看 模块解析文档了解详情。
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/devtools_page/vue/*"]
+    }
+  },
+  "types": [
+    "element-plus/global.d.ts" // 原来是element-plus/global
+  ],
+  "exclude": ["build", "node_modules", "dist"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue",
+    "vite.config.ts",
+    "src/manifest.json",
+    "package.json",
+    "src/test.js"
+  ]
+}

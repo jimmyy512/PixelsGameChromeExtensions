@@ -1,0 +1,52 @@
+{
+  "manifest_version": 3,
+  "name": "水果開發工具",
+  "description": "方便RD除錯",
+  "version": "0.0.1",
+  "homepage_url": "https://github.com/elwin013/vitaly-extension",
+  "action": {
+    "default_popup": "src/popup/index.html",
+    "default_icon": {
+      "16": "icon-16.png"
+    }
+  },
+  "devtools_page": "src/devtools_page/index.html",
+  "options_page": "src/options/index.html",
+  "icons": {
+    "16": "icon-16.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
+  },
+  "background": {
+    "service_worker": "src/background.ts"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*", "*://*/*"],
+      "js": ["src/content-scripts/content.ts"],
+      "css": ["src/content-scripts/content.css"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "src/content-scripts/content.css",
+        "icon-128.png",
+        "inject.js"
+      ],
+      "matches": ["http://*/*", "https://*/*", "*://*/*"]
+    }
+  ],
+  "host_permissions": ["*://*/*"],
+  "permissions": [
+    "tabs",
+    "storage",
+    "activeTab",
+    "webNavigation",
+    "scripting",
+    "alarms",
+    "https://cloud.ljbcqa.site/plogin",
+    "https://cloud.ljbdev.site/plogin",
+    "https://qa-cloud.cloud-hub.co/*"
+  ]
+}
