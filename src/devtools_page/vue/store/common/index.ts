@@ -44,8 +44,8 @@ export const useConf = defineStore('confStore', {
   state: () => ({
     // conf api是否完成
     isLoading: true,
-    // 登入是否成功
-    isAccess: false,
+    // 登入是否成功, 此插件不需要登入驗證模組,直接設為true
+    isAccess: true,
     // 是否為PC
     isPC: false,
     // Google Excel上的 版本號
@@ -73,7 +73,7 @@ export const useConf = defineStore('confStore', {
     async init() {
       this.isLoading = true;
       // 開發模式不用驗證密碼輸入 import.meta.env.MODE === 'development'
-      if (import.meta.env.MODE === 'development') {
+      if (true) {
         this.isAccess = true;
         this.isLoading = false;
       } else {
@@ -85,52 +85,6 @@ export const useConf = defineStore('confStore', {
       this.getOnlineGoogleExcelConf().finally(() => {
         this.isLoading = false;
       });
-    },
-    refreshConf() {
-      chrome.devtools.inspectedWindow.eval(
-        'getApp().$conf',
-        (result, isException) => {
-          if (!result) {
-            this.isPC = true;
-            this.getPCConf();
-          } else {
-            this.isPC = false;
-            this.getUniAppConf();
-          }
-        }
-      );
-    },
-    getPCConf() {
-      chrome.devtools.inspectedWindow.eval(
-        'window.CONF',
-        (result: PCConfResult) => {
-          if (result) {
-            this.conf.channelID = result.channelId || '';
-            this.conf.gameVer = result.publishVersion || '';
-            this.conf.agentID = result.agentId || 0;
-            this.conf.resId = result.skinId || 0;
-            this.conf.appEnvStr = result.env
-              ? appEnvParam[result.env] || '研發服'
-              : '';
-          }
-        }
-      );
-    },
-    getUniAppConf() {
-      chrome.devtools.inspectedWindow.eval(
-        'getApp().$conf',
-        (result: UniAppConfResult) => {
-          if (result) {
-            this.conf.channelID = result.ChannelID || '';
-            this.conf.gameVer = result.gameVer || '';
-            this.conf.agentID = result.AgentID || 0;
-            this.conf.resId = result.resId || 0;
-            this.conf.appEnvStr = result.appEnv
-              ? appEnvParam[result.appEnv] || '研發服'
-              : '';
-          }
-        }
-      );
     },
     getOnlineGoogleExcelConf() {
       return axios

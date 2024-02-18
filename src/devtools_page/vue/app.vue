@@ -58,16 +58,10 @@ import AboutUs from '@/pages/AboutUs/index.vue';
 import Note from '@/pages/Note/index.vue';
 
 const activeName = ref('Common');
-useConf().refreshConf();
+
 useConf().init();
 
-let refreshUpdateEvent = setInterval(() => {
-  useConf().refreshConf();
-}, 1000);
-
-onBeforeUnmount(() => {
-  clearInterval(refreshUpdateEvent);
-});
+onBeforeUnmount(() => {});
 
 const tabs = [
   {
@@ -99,11 +93,11 @@ const tabs = [
   //   name: 'Note',
   //   component: Note,
   // },
-  // {
-  //   label: '關於版本',
-  //   name: 'AboutUs',
-  //   component: AboutUs,
-  // },
+  {
+    label: '關於版本',
+    name: 'AboutUs',
+    component: AboutUs,
+  },
 ];
 </script>
 

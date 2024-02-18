@@ -2,10 +2,6 @@ import axios from 'axios';
 import { ElMessage } from 'element-plus';
 
 const instance = axios.create({
-  // baseURL:
-  //   import.meta.env.MODE === 'development'
-  //     ? '/api'
-  //     : import.meta.env.VITE_API_DOMAIN,
   timeout: 5000,
   withCredentials: true,
 });

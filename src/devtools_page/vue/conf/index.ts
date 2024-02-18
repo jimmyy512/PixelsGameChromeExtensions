@@ -1,8 +1,8 @@
 export const CountCONF = {
   Milk: {
     name: '牛奶',
-    // CountDown: [4800], // 1.5h
-    CountDown: [5], // 1.5h
+    CountDown: [4800], // 1.5h
+    // CountDown: [5], // 1.5h
   },
   Energy: {
     name: '能量',
@@ -25,5 +25,5 @@ export const CountCONF = {
     CountDown: [5400], // 1h
   },
 };
-
+console.warn('zz:', typeof CountCONF);
 export type CountConfKey = keyof typeof CountCONF;

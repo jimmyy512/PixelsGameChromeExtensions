@@ -1,3 +1,4 @@
+<!-- 此專案用不到登入驗證模組 -->
 <script setup lang="ts">
 import { onMounted, ref, reactive } from 'vue';
 import { useConf } from '@/store';
