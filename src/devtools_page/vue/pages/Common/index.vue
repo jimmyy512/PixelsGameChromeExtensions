@@ -1,7 +1,39 @@
 <template>
   <div id="CommonPage">
+    <el-row class="CloudSaveBlock">
+      <el-col :span="6">
+        <div class="topBlock">雲端存檔時間</div>
+        <div class="bottomBlock">
+          {{ cloudTimestampDisplay }}
+        </div>
+      </el-col>
+      <el-col :span="6">
+        <el-button
+          type="success"
+          size="small"
+          @click="SaveStorage.uploadSaveAllDataToCloudStorage"
+          :icon="Upload"
+        >
+          上傳存檔
+        </el-button>
+      </el-col>
+
+      <el-col :span="6">
+        <el-button
+          type="warning"
+          size="small"
+          @click="SaveStorage.downloadSaveAllDataFromCloudStorage"
+          :icon="Download"
+        >
+          讀取存檔
+        </el-button>
+      </el-col>
+    </el-row>
+
+    <!-- 基本快速採集 -->
     <template v-for="(item, key) in TimeCountState" :key="key">
       <el-row align="middle">
+        <!-- {{ CountCONF[key].name }} -->
         <el-col :span="6">
           <div class="RowTitle">{{ CountCONF[key].name }}採集</div>
         </el-col>
@@ -46,6 +78,7 @@
       </el-row>
     </template>
 
+    <!-- 自動製作 -->
     <el-row>
       <el-col :span="12">
         <el-button
@@ -73,13 +106,15 @@ import {
   reactive,
   ref,
   watchEffect,
+  initCustomFormatter,
 } from 'vue';
-
+import { Upload, Download } from '@element-plus/icons-vue';
 import { useConf } from '@/store';
 import { ElMessage } from 'element-plus';
 import { Refresh, Message } from '@element-plus/icons-vue';
 import { inspectWindowEval } from '@/utils/utils';
 import { CountCONF, CountConfKey } from '@/conf/index';
+import SaveStorage from '@/utils/SaveStorage';
 
 interface CountData {
   Stage: number;
@@ -100,8 +135,30 @@ const intervalEvent2 = setInterval(() => {
 }, 5000);
 
 let IsAutoMake = ref(false);
-
 const nowTimestamp = ref(Date.now());
+
+let cloudSaveTime = ref(-1);
+const cloudTimestampDisplay = computed(() => {
+  console.warn(
+    'cloudSaveTime:',
+    cloudSaveTime.value,
+    cloudSaveTime.value === -1
+  );
+  if (cloudSaveTime.value === -1) {
+    return '尚無讀取過雲端';
+  } else {
+    // 創建一個新的日期對象
+    const date = new Date(cloudSaveTime.value);
+
+    // 獲取月份、日期、小時和分鐘，並將其格式化（注意月份從0開始，所以要+1）
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+
+    return `${month}/${day} ${hours}:${minutes}`;
+  }
+});
 
 const goMake = () => {
   inspectWindowEval(
@@ -119,6 +176,7 @@ const createTimeCountState = () => {
   const state = {} as Record<CountConfKey, CountData>;
   for (const key in CountCONF) {
     if (Object.prototype.hasOwnProperty.call(CountCONF, key)) {
+      console.warn('key as CountConfKey:', key as CountConfKey);
       state[key as CountConfKey] = {
         Stage: 0,
         EndTimeStamp: -1,
@@ -140,7 +198,10 @@ const startCountDown = (typeKey: CountConfKey) => {
 };
 
 const saveData = () => {
-  chrome.storage.local.set({ NoteState: TimeCountState });
+  SaveStorage.saveLocalStorage(
+    SaveStorage.LocalStorageKey.Fast_Count_State,
+    TimeCountState
+  );
 };
 
 const resetTime = (resetKey: CountConfKey) => {
@@ -152,17 +213,15 @@ let TimeCountState: Record<CountConfKey, CountData> = reactive(
   {} as Record<CountConfKey, CountData>
 );
 onMounted(() => {
-  chrome.storage.local.get('NoteState', result => {
-    const newState = result.NoteState
-      ? result.NoteState
-      : createTimeCountState();
+  SaveStorage.loadLocalStorage(
+    SaveStorage.LocalStorageKey.Fast_Count_State
+  ).then((result: any) => {
+    const newState = result ? result : createTimeCountState();
     for (const key in newState) {
       if (newState.hasOwnProperty(key)) {
         TimeCountState[key as CountConfKey] = newState[key];
       }
     }
-
-    console.warn('asd', JSON.stringify(result.NoteState));
 
     watchEffect(() => {
       for (const key in TimeCountState) {
@@ -181,6 +240,8 @@ onMounted(() => {
         }
       }
     });
+
+    init();
   });
 });
 
@@ -188,12 +249,22 @@ onBeforeUnmount(() => {
   clearInterval(intervalEvent);
   clearInterval(intervalEvent2);
 });
+
+const init = () => {
+  SaveStorage.loadLocalStorage(
+    SaveStorage.LocalStorageKey.Cloud_Save_Time_Stamp
+  ).then((result: any) => {
+    if (result) {
+      cloudSaveTime.value = result;
+    }
+  });
+};
 </script>
 
 <style scoped lang="scss">
 #CommonPage {
   .RowTitle {
-    font-size: 20px;
+    font-size: 16px;
     font-weight: bold;
     display: flex;
     align-items: center;
@@ -212,6 +283,16 @@ onBeforeUnmount(() => {
     align-items: center;
     &:hover {
       color: white;
+    }
+  }
+
+  .CloudSaveBlock {
+    display: flex;
+    align-items: center;
+    .topBlock {
+      font-weight: bold;
+    }
+    .bottomBlock {
     }
   }
 }
