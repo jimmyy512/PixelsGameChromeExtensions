@@ -2,37 +2,7 @@ import { defineStore } from 'pinia';
 import axios from '@/utils/axios';
 import { getChromeLocalSync, compareVersion } from '@/utils/utils';
 import { ElMessage } from 'element-plus';
-
-interface PCConfResult {
-  env?: number;
-  channelId?: string;
-  publishVersion?: string;
-  skinId?: number;
-  agentId?: number;
-}
-
-interface UniAppConfResult {
-  appEnv?: number;
-  ChannelID?: string;
-  gameVer?: string;
-  resId?: number;
-  AgentID?: number;
-}
-
-export interface ConfResult {
-  appEnvStr: string;
-  channelID: string;
-  gameVer: string;
-  resId: number;
-  agentID: number;
-}
-
-const appEnvParam: { [key: number]: string } = {
-  1: 'CQA',
-  2: '預正式',
-  3: '正式服',
-  4: '研發服二',
-};
+import ProjectConfig from '@/conf/ProjectConfig.json';
 
 // Local Storage 登入密碼
 let localLoginPWD = '';
@@ -46,20 +16,10 @@ export const useConf = defineStore('confStore', {
     isLoading: true,
     // 登入是否成功, 此插件不需要登入驗證模組,直接設為true
     isAccess: true,
-    // 是否為PC
-    isPC: false,
     // Google Excel上的 版本號
     onlineVersion: '',
     // Google Excel上的 登入密碼
     onlineCorrectPWD: '',
-    // 遊戲的 conf
-    conf: {
-      appEnvStr: '',
-      channelID: '',
-      gameVer: '',
-      resId: 0,
-      agentID: 0,
-    },
   }),
   getters: {
     isNeedUpdate: state => {
@@ -72,14 +32,15 @@ export const useConf = defineStore('confStore', {
     },
     async init() {
       this.isLoading = true;
-      // 開發模式不用驗證密碼輸入 import.meta.env.MODE === 'development'
-      if (true) {
-        this.isAccess = true;
-        this.isLoading = false;
-      } else {
-        let localRes = await getChromeLocalSync(['LoginPWD']);
-        if (localRes?.LoginPWD) {
-          localLoginPWD = localRes.LoginPWD;
+      if (ProjectConfig.IsNeedPWD) {
+        if (import.meta.env.MODE === 'development') {
+          this.isAccess = true;
+          this.isLoading = false;
+        } else {
+          let localRes = await getChromeLocalSync(['LoginPWD']);
+          if (localRes?.LoginPWD) {
+            localLoginPWD = localRes.LoginPWD;
+          }
         }
       }
       this.getOnlineGoogleExcelConf().finally(() => {
@@ -88,14 +49,11 @@ export const useConf = defineStore('confStore', {
     },
     getOnlineGoogleExcelConf() {
       return axios
-        .get(
-          'https://docs.google.com/spreadsheets/d/1uuFUDU7DMiGMR4Wr2CdHocGyrIG2aTPIagyysjCQ264/edit#gid=0',
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          }
-        )
+        .get(ProjectConfig.GoogleExcelURL, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
         .then(res => {
           if (res?.data) {
             const parser = new DOMParser();
@@ -117,6 +75,7 @@ export const useConf = defineStore('confStore', {
               // 如果有至少一行，選擇最後一行（索引為 lines.length - 1），並去除首尾空格
               if (lines && lines.length >= 1) {
                 let jsonStr = lines[lines.length - 1].trim();
+                // data 是 google excel 上的 object
                 let data = JSON.parse(jsonStr);
                 this.onlineCorrectPWD = data.PWD;
                 this.onlineVersion = data.Version;

@@ -1,8 +1,8 @@
 <template>
-  <a href="https://github.com/elwin013/vitaly-extension" target="_blank">
+  <a href="https://play.pixels.xyz/" target="_blank">
     <img src="./../assets/vitaly.png" class="logo" />
   </a>
-  <h1>{{ getHello('Vitaly') }}</h1>
+  <h1>{{ getHello('Pixel') }}</h1>
   <a :href="getExtensionUrl('src/options/index.html')" target="_blank">
     Open options page 123
   </a>

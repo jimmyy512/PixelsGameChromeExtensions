@@ -31,6 +31,7 @@
 <script setup lang="ts">
 import { useConf } from '@/store';
 import { computed } from 'vue';
+import ProjectConfig from '@/conf/ProjectConfig.json';
 // @ts-ignore
 const version = __Admine_VERSION__;
 
@@ -43,9 +44,7 @@ const isNeedUpdate = computed(() => {
 });
 
 const updateBtnClick = () => {
-  window.open(
-    'https://mgbilibili.atlassian.net/wiki/spaces/FT/pages/82674135/Chrome'
-  );
+  window.open(ProjectConfig.UpdateDownloadURL);
 };
 </script>
 
