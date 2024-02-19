@@ -55,6 +55,7 @@ import Common from '@/pages/Common/index.vue';
 import WebsocketMonitor from '@/pages/WebsocketMonitor/index.vue';
 import Backstage from '@/pages/Backstage/index.vue';
 import AboutUs from '@/pages/AboutUs/index.vue';
+import Market from '@/pages/Market/index.vue';
 import Note from '@/pages/Note/index.vue';
 
 const activeName = ref('Common');
@@ -67,8 +68,12 @@ const tabs = [
   {
     label: '基本資訊',
     name: 'Common',
-    // component: defineAsyncComponent(() => import('@/pages/Common/index.vue')),
     component: Common,
+  },
+  {
+    label: '市場',
+    name: 'Market',
+    component: Market,
   },
   // {
   //   label: 'WebSocket監控',

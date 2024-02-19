@@ -39,9 +39,11 @@
         </el-col>
 
         <el-col :span="6">
-          <div class="resetBlock" @click="resetTime(key)">
-            計時重置
-            <el-icon><Refresh /></el-icon>
+          <div class="resetBlock">
+            <span class="resetBlockBtn" @click="resetTime(key)">
+              計時重置
+              <el-icon><Refresh /></el-icon>
+            </span>
           </div>
         </el-col>
 
@@ -300,11 +302,13 @@ const init = () => {
   }
 
   .resetBlock {
-    cursor: pointer;
     display: flex;
     align-items: center;
-    &:hover {
-      color: white;
+    .resetBlockBtn {
+      cursor: pointer;
+      &:hover {
+        color: white;
+      }
     }
   }
 
