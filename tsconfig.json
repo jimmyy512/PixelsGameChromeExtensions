@@ -28,6 +28,7 @@
     "src/**/*.d.ts",
     "src/**/*.tsx",
     "src/**/*.vue",
+    "src/**/*.json",
     "vite.config.ts",
     "src/manifest.json",
     "package.json",

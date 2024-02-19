@@ -38,12 +38,14 @@ export default class SaveStorage {
       );
     }
 
-    chrome.storage.sync
-      .set({ [SaveStorage.PixelGameSaveData]: DataToSave })
-      .then(res => {
-        console.warn('upload:', res);
+    console.warn('asd1:', DataToSave);
+    console.warn('asd2:', JSON.stringify(DataToSave));
+    chrome.storage.sync.set(
+      { [SaveStorage.PixelGameSaveData]: DataToSave },
+      () => {
         ElMessage.success('已上傳至雲端據');
-      });
+      }
+    );
   }
 
   public static async downloadSaveAllDataFromCloudStorage() {

@@ -1,6 +1,6 @@
 <template>
   <div id="CommonPage">
-    <el-row class="CloudSaveBlock">
+    <!-- <el-row class="CloudSaveBlock">
       <el-col :span="6">
         <div class="topBlock">雲端存檔時間</div>
         <div class="bottomBlock">
@@ -28,7 +28,7 @@
           讀取存檔
         </el-button>
       </el-col>
-    </el-row>
+    </el-row> -->
 
     <!-- 基本快速採集 -->
     <template v-for="(item, key) in TimeCountState" :key="key">
@@ -71,7 +71,10 @@
                   : ''
               "
             >
-              剩餘時間: {{ item.DisplayLabel }}
+              剩餘時間: <span>{{ item.DisplayLabel_CountDown }}</span>
+              <span class="FormatCountDown"
+                >({{ item.DisplayLabel_FormatCountDown }})</span
+              >
             </div>
           </template>
         </el-col>
@@ -119,7 +122,8 @@ import SaveStorage from '@/utils/SaveStorage';
 interface CountData {
   Stage: number;
   EndTimeStamp: number;
-  DisplayLabel: string;
+  DisplayLabel_CountDown: string;
+  DisplayLabel_FormatCountDown: string;
   DiffSeconds: number;
   IsTriggerStart: boolean;
 }
@@ -180,7 +184,8 @@ const createTimeCountState = () => {
       state[key as CountConfKey] = {
         Stage: 0,
         EndTimeStamp: -1,
-        DisplayLabel: '',
+        DisplayLabel_CountDown: '',
+        DisplayLabel_FormatCountDown: '',
         DiffSeconds: -1,
         IsTriggerStart: false,
       };
@@ -234,9 +239,22 @@ onMounted(() => {
           const hours = Math.floor(diffTime / 1000 / 60 / 60);
           const minutes = Math.floor((diffTime / 1000 / 60) % 60);
           const seconds = Math.floor((diffTime / 1000) % 60);
-          item.DisplayLabel = `${hours.toString().padStart(2, '0')}:${minutes
+
+          // 將結束時間點（EndTimeStamp）轉換成本地時間格式
+          let endTime = new Date(item.EndTimeStamp);
+          item.DisplayLabel_FormatCountDown = endTime.toLocaleTimeString(
+            'zh-TW',
+            {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false,
+            }
+          );
+          item.DisplayLabel_CountDown = `${hours
             .toString()
-            .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            .padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds
+            .toString()
+            .padStart(2, '0')} - `;
         }
       }
     });
@@ -263,6 +281,7 @@ const init = () => {
 
 <style scoped lang="scss">
 #CommonPage {
+  $MainTextColor: rgb(66, 185, 131);
   .RowTitle {
     font-size: 16px;
     font-weight: bold;
@@ -272,6 +291,9 @@ const init = () => {
   .RowContent {
     font-size: 16px;
     color: white;
+    .FormatCountDown {
+      color: $MainTextColor;
+    }
   }
   .el-row {
     margin-bottom: 20px;
