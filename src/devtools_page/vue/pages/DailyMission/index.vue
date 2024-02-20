@@ -21,7 +21,7 @@ const tabId = chrome.devtools.inspectedWindow.tabId;
 const btnClick = () => {
   chrome.runtime.sendMessage({
     from: 'devtools',
-    message: 'Hello from DevTools',
+    action: 'CaptureDailyMission',
     tabId,
   });
 };
