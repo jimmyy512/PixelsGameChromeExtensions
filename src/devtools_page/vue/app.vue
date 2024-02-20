@@ -24,13 +24,7 @@
               </div>
             </template>
 
-            <!-- 特定頁面組件記憶體會持續保持,其餘頁面都是懶加載 -->
             <component
-              v-if="
-                activeName === tab.name ||
-                tab.name === 'WebsocketMonitor' ||
-                tab.name === 'AboutUs'
-              "
               :is="tab.component"
               :key="tab.name"
               style="height: 100%"
@@ -52,13 +46,13 @@ import { ref, defineAsyncComponent, onBeforeUnmount } from 'vue';
 import { useConf } from '@/store';
 import LoginPopUp from '@/components/LoginPopUp.vue';
 import Common from '@/pages/Common/index.vue';
-import WebsocketMonitor from '@/pages/WebsocketMonitor/index.vue';
-import Backstage from '@/pages/Backstage/index.vue';
-import AboutUs from '@/pages/AboutUs/index.vue';
 import Market from '@/pages/Market/index.vue';
+import DailyMission from '@/pages/DailyMission/index.vue';
+import AboutUs from '@/pages/AboutUs/index.vue';
+
 import Note from '@/pages/Note/index.vue';
 
-const activeName = ref('Common');
+const activeName = ref('DailyMission');
 
 useConf().init();
 
@@ -75,29 +69,11 @@ const tabs = [
     name: 'Market',
     component: Market,
   },
-  // {
-  //   label: 'WebSocket監控',
-  //   name: 'WebsocketMonitor',
-
-  //   component: WebsocketMonitor,
-  // },
-  // {
-  //   label: '後台頁面',
-  //   name: 'backstage',
-
-  //   component: Backstage,
-  // },
-  // {
-  //   label: 'Elastic',
-  //   name: 'Elastic',
-
-  //   component: Elastic,
-  // },
-  // {
-  //   label: '開發筆記',
-  //   name: 'Note',
-  //   component: Note,
-  // },
+  {
+    label: '每日任務',
+    name: 'DailyMission',
+    component: DailyMission,
+  },
   {
     label: '關於版本',
     name: 'AboutUs',

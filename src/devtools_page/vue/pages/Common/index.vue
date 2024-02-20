@@ -58,7 +58,10 @@
             </el-button>
             <el-button
               type="warning"
-              @click="TimeCountState[key].IsTriggerStart = false"
+              @click="
+                TimeCountState[key].IsTriggerStart = false;
+                saveData();
+              "
               v-if="TimeCountState[key].IsTriggerStart"
             >
               我知道了!

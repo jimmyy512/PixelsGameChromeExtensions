@@ -32,7 +32,8 @@
       "resources": [
         "src/content-scripts/content.css",
         "icon-128.png",
-        "inject.js"
+        "inject.js",
+        "html2canvas.js"
       ],
       "matches": ["http://*/*", "https://*/*", "*://*/*"]
     }
