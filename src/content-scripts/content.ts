@@ -10,7 +10,7 @@ injectScript(chrome.runtime.getURL('inject.js'), 'body');
 
 // 监听来自background.js的消息
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-  console.warn('content message:', request);
+  // console.warn('content message:', request);
   if (request.from === 'devtools') {
     if (request.action === 'CaptureDailyMission') {
       startCaptureDailyMission();
@@ -19,20 +19,25 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 });
 
 const startCaptureDailyMission = () => {
-  html2canvas(document.querySelector('.Store_items-content__FtMRE'), {
-    // html2canvas(document.querySelector('body'), {
-    backgroundColor: '#222044',
-    useCORS: true,
-  }).then((canvas: any) => {
-    var imgURL = canvas.toDataURL('image/png');
-    console.warn('imgURL:', imgURL);
-    // 将数据发送到background script
-    chrome.runtime.sendMessage({
-      from: 'content_script',
-      action: 'ChromeAction_END_CAPTURE',
-      data: imgURL,
+  const targetDomStr = '.Store_items-content__FtMRE';
+  if (document.querySelector(targetDomStr)) {
+    html2canvas(document.querySelector('.Store_items-content__FtMRE'), {
+      // html2canvas(document.querySelector('body'), {
+      backgroundColor: '#222044',
+      useCORS: true,
+    }).then((canvas: any) => {
+      var imgURL = canvas.toDataURL('image/png');
+      console.warn('imgURL:', imgURL);
+      // 将数据发送到background script
+      chrome.runtime.sendMessage({
+        from: 'content_script',
+        action: 'ChromeAction_END_CAPTURE',
+        data: imgURL,
+      });
     });
-  });
+  } else {
+    console.log('Chrome DevTool: 尚未打開每日任務面板:', targetDomStr);
+  }
 };
 
 // 发送消息到background.js

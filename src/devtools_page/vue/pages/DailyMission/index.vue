@@ -1,15 +1,14 @@
 <template>
   <div id="DailyMission">
-    this is dasd
-    {{ dailyImg }}
+    <div class="tip">只要打開每日任務頁面，就會自動截圖到此處</div>
 
     <img class="DailyImg" :src="dailyImg" alt="" />
-    <el-button type="primary" @click="btnClick">Primary</el-button>
+    <!-- <el-button type="primary" @click="startCapture">Primary</el-button> -->
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 let dailyImg = ref('');
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
@@ -22,8 +21,16 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   }
 });
 
-const tabId = chrome.devtools.inspectedWindow.tabId;
-const btnClick = () => {
+const interval = setInterval(() => {
+  startCapture();
+}, 1000);
+
+onUnmounted(() => {
+  clearInterval(interval);
+});
+
+const startCapture = () => {
+  const tabId = chrome.devtools.inspectedWindow.tabId;
   chrome.runtime.sendMessage({
     from: 'devtools',
     action: 'CaptureDailyMission',
@@ -40,6 +47,9 @@ const btnClick = () => {
     display: block;
     width: 100%;
     height: auto;
+  }
+  .tip {
+    margin-bottom: 20px;
   }
 }
 </style>
