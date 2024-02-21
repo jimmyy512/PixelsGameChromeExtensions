@@ -49,9 +49,8 @@
       </el-col>
     </el-row>
     <!-- 基本快速採集 -->
-    <template v-for="(item, key) in TimeCountState" :key="key">
+    <template v-for="(item, key, index) in TimeCountState" :key="key">
       <el-row align="middle">
-        <!-- {{ CountCONF[key].name }} -->
         <el-col :span="8">
           <div class="RowTitle">{{ CountCONF[key].name }}採集</div>
           <div class="resetBlock">
@@ -62,24 +61,22 @@
           </div>
         </el-col>
 
-        <!-- <el-col :span="6"> </el-col> -->
-
         <el-col :span="12">
-          <template v-if="TimeCountState[key].EndTimeStamp === -1">
+          <template v-if="item.EndTimeStamp === -1">
             <el-button
               type="success"
-              @click="startCountDown(key)"
-              v-if="!TimeCountState[key].IsTriggerStart"
+              @click="startCountDown(item, CountCONF[key].CountDown[0])"
+              v-if="!item.IsTriggerStart"
             >
               開始計時
             </el-button>
             <el-button
               type="warning"
               @click="
-                TimeCountState[key].IsTriggerStart = false;
+                item.IsTriggerStart = false;
                 saveData();
               "
-              v-if="TimeCountState[key].IsTriggerStart"
+              v-if="item.IsTriggerStart"
             >
               我知道了!
             </el-button>
@@ -105,10 +102,55 @@
     </template>
 
     <!-- 自定義計時器 -->
-
     <template v-for="(item, key) in customizeData" :key="key">
       <el-row>
-        <el-col :span="12"> {{ item }}</el-col>
+        <el-col :span="8">
+          <div class="RowTitle">{{ item.CustomizeName }}</div>
+          <div class="resetBlock">
+            <span class="resetBlockBtn" @click="">
+              計時重置
+              <el-icon><Refresh /></el-icon>
+            </span>
+          </div>
+        </el-col>
+
+        <el-col :span="12">
+          <template v-if="item.EndTimeStamp === -1">
+            <el-button
+              type="success"
+              @click="startCountDown(item, item.CustomizeMin * 60)"
+              v-if="!item.IsTriggerStart"
+            >
+              開始計時
+            </el-button>
+            <el-button
+              type="warning"
+              @click="
+                item.IsTriggerStart = false;
+                saveData();
+              "
+              v-if="item.IsTriggerStart"
+            >
+              我知道了!
+            </el-button>
+          </template>
+          <template v-else>
+            <div
+              class="RowContent"
+              :style="
+                item.DiffSeconds < 180 && item.DiffSeconds >= 0
+                  ? 'color:#ec4747;'
+                  : ''
+              "
+            >
+              剩餘時間: <span>{{ item.DisplayLabel_CountDown }}</span>
+              <span>-</span>
+              <span class="FormatCountDown">
+                ( {{ item.DisplayLabel_FormatCountDown }} )</span
+              >
+            </div>
+          </template>
+        </el-col>
       </el-row>
     </template>
 
@@ -180,6 +222,22 @@ const customizeInputData = reactive<CustomizeInputData>({
   min: null,
 });
 
+let cloudSaveTime = ref(-1);
+
+const intervalEvent = setInterval(() => {
+  nowTimestamp.value = Date.now();
+}, 1000);
+
+const intervalEvent2 = setInterval(() => {
+  if (IsAutoMake.value) {
+    goMake();
+  }
+}, 5000);
+
+let TimeCountState: Record<CountConfKey, CountData> = reactive(
+  {} as Record<CountConfKey, CountData>
+);
+
 const addToCustomizeData = () => {
   if (customizeInputData.name && customizeInputData.min) {
     let time = Date.now();
@@ -198,39 +256,6 @@ const addToCustomizeData = () => {
     customizeInputData.name = null;
   }
 };
-
-let cloudSaveTime = ref(-1);
-const cloudTimestampDisplay = computed(() => {
-  console.warn(
-    'cloudSaveTime:',
-    cloudSaveTime.value,
-    cloudSaveTime.value === -1
-  );
-  if (cloudSaveTime.value === -1) {
-    return '尚無讀取過雲端';
-  } else {
-    // 創建一個新的日期對象
-    const date = new Date(cloudSaveTime.value);
-
-    // 獲取月份、日期、小時和分鐘，並將其格式化（注意月份從0開始，所以要+1）
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-
-    return `${month}/${day} ${hours}:${minutes}`;
-  }
-});
-
-const intervalEvent = setInterval(() => {
-  nowTimestamp.value = Date.now();
-}, 1000);
-
-const intervalEvent2 = setInterval(() => {
-  if (IsAutoMake.value) {
-    goMake();
-  }
-}, 5000);
 
 const goMake = () => {
   inspectWindowEval(
@@ -261,11 +286,10 @@ const createTimeCountState = () => {
   return state;
 };
 
-const startCountDown = (typeKey: CountConfKey) => {
+const startCountDown = (item: CountData, countDownTime: number) => {
   let time = Date.now();
-  let countDownTime = CountCONF[typeKey].CountDown[0];
-  TimeCountState[typeKey].EndTimeStamp = time + countDownTime * 1000;
-  TimeCountState[typeKey].IsTriggerStart = true;
+  item.EndTimeStamp = time + countDownTime * 1000;
+  item.IsTriggerStart = true;
   saveData();
 };
 
@@ -281,49 +305,79 @@ const resetTime = (resetKey: CountConfKey) => {
   TimeCountState[resetKey].IsTriggerStart = false;
 };
 
-let TimeCountState: Record<CountConfKey, CountData> = reactive(
-  {} as Record<CountConfKey, CountData>
-);
+const cloudTimestampDisplay = computed(() => {
+  console.warn(
+    'cloudSaveTime:',
+    cloudSaveTime.value,
+    cloudSaveTime.value === -1
+  );
+  if (cloudSaveTime.value === -1) {
+    return '尚無讀取過雲端';
+  } else {
+    // 創建一個新的日期對象
+    const date = new Date(cloudSaveTime.value);
+
+    // 獲取月份、日期、小時和分鐘，並將其格式化（注意月份從0開始，所以要+1）
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+
+    return `${month}/${day} ${hours}:${minutes}`;
+  }
+});
+
+const countStateCalculate = (countData: CountData) => {
+  let diffTime = countData.EndTimeStamp - nowTimestamp.value;
+  countData.DiffSeconds = Math.floor(diffTime / 1000);
+  if (diffTime < 0) {
+    countData.EndTimeStamp = -1;
+  } else {
+    const hours = Math.floor(diffTime / 1000 / 60 / 60);
+    const minutes = Math.floor((diffTime / 1000 / 60) % 60);
+    const seconds = Math.floor((diffTime / 1000) % 60);
+
+    // 將結束時間點（EndTimeStamp）轉換成本地時間格式
+    let endTime = new Date(countData.EndTimeStamp);
+    countData.DisplayLabel_FormatCountDown = endTime.toLocaleTimeString(
+      'zh-TW',
+      {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      }
+    );
+    countData.DisplayLabel_CountDown = `${hours
+      .toString()
+      .padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds
+      .toString()
+      .padStart(2, '0')} `;
+  }
+};
+
 onMounted(() => {
   SaveStorage.loadLocalStorage(
     SaveStorage.LocalStorageKey.Fast_Count_State
   ).then((result: any) => {
-    const newState = result ? result : createTimeCountState();
+    // tmp
+    // const newState = result ? result : createTimeCountState();
+    const newState = createTimeCountState();
     for (const key in newState) {
       if (newState.hasOwnProperty(key)) {
-        TimeCountState[key as CountConfKey] = newState[key];
+        TimeCountState[key as CountConfKey] =
+          newState[key as keyof typeof TimeCountState];
       }
     }
 
     watchEffect(() => {
       for (const key in TimeCountState) {
-        let item = TimeCountState[key as keyof typeof TimeCountState];
-        let diffTime = item.EndTimeStamp - nowTimestamp.value;
-        item.DiffSeconds = Math.floor(diffTime / 1000);
-        if (diffTime < 0) {
-          item.EndTimeStamp = -1;
-        } else {
-          const hours = Math.floor(diffTime / 1000 / 60 / 60);
-          const minutes = Math.floor((diffTime / 1000 / 60) % 60);
-          const seconds = Math.floor((diffTime / 1000) % 60);
-
-          // 將結束時間點（EndTimeStamp）轉換成本地時間格式
-          let endTime = new Date(item.EndTimeStamp);
-          item.DisplayLabel_FormatCountDown = endTime.toLocaleTimeString(
-            'zh-TW',
-            {
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: false,
-            }
-          );
-          item.DisplayLabel_CountDown = `${hours
-            .toString()
-            .padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds
-            .toString()
-            .padStart(2, '0')} `;
-        }
+        let item = TimeCountState[key as CountConfKey];
+        countStateCalculate(item);
       }
+
+      customizeData.value.forEach(item => {
+        countStateCalculate(item);
+      });
     });
 
     init();
