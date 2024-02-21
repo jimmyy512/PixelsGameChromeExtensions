@@ -8,19 +8,6 @@ function injectScript(file: any, node: any) {
 }
 injectScript(chrome.runtime.getURL('inject.js'), 'body');
 
-// 注入方法2
-// function injectCustomScript(scriptContent) {
-//   const script = document.createElement('script');
-//   script.textContent = scriptContent;
-//   (document.head || document.documentElement).appendChild(script);
-// }
-
-// fetch(chrome.runtime.getURL('src/content-scripts/CaptureDom.js'))
-//   .then(response => response.text())
-//   .then(scriptContent => {
-//     injectCustomScript(scriptContent);
-//   });
-
 // 监听来自background.js的消息
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   console.warn('content message:', request);
@@ -32,19 +19,20 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 });
 
 const startCaptureDailyMission = () => {
-  console.warn('startCaptureDailyMission');
-  html2canvas(document.querySelector('.Store_items-content__FtMRE')).then(
-    (canvas: any) => {
-      var imgURL = canvas.toDataURL('image/png');
-      console.warn('imgURL:', imgURL);
-      // 将数据发送到background script
-      chrome.runtime.sendMessage({
-        from: 'content_script',
-        action: 'ChromeAction_END_CAPTURE',
-        data: imgURL,
-      });
-    }
-  );
+  html2canvas(document.querySelector('.Store_items-content__FtMRE'), {
+    // html2canvas(document.querySelector('body'), {
+    backgroundColor: '#222044',
+    useCORS: true,
+  }).then((canvas: any) => {
+    var imgURL = canvas.toDataURL('image/png');
+    console.warn('imgURL:', imgURL);
+    // 将数据发送到background script
+    chrome.runtime.sendMessage({
+      from: 'content_script',
+      action: 'ChromeAction_END_CAPTURE',
+      data: imgURL,
+    });
+  });
 };
 
 // 发送消息到background.js

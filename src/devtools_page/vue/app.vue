@@ -88,6 +88,7 @@ const tabs = [
   // 15px 是margin-bottom高度
   height: calc(100% - 40px - 15px) !important;
   padding-bottom: 20px;
+  overflow-y: auto !important;
 }
 </style>
 <style scoped lang="scss">

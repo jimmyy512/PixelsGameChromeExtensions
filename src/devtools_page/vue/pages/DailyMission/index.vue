@@ -35,7 +35,9 @@ const btnClick = () => {
 <style lang="scss" scoped>
 #DailyMission {
   width: 100%;
+  height: auto;
   .DailyImg {
+    display: block;
     width: 100%;
     height: auto;
   }
