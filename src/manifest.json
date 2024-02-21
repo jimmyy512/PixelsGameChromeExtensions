@@ -25,7 +25,6 @@
       "matches": ["http://*/*", "https://*/*", "*://*/*"],
       "js": [
         "src/content-scripts/html2canvas.js",
-        "src/content-scripts/CaptureDom.js",
         "src/content-scripts/content.ts"
       ],
       "css": ["src/content-scripts/content.css"]
@@ -35,6 +34,7 @@
     {
       "resources": [
         "src/content-scripts/content.css",
+        "src/content-scripts/CaptureDom.js",
         "icon-128.png",
         "inject.js"
       ],

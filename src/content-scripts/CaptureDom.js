@@ -1,34 +1,28 @@
-console.warn('captureDom start!!!!');
-
-// setTimeout(() => {
-//   console.warn(
-//     'asd:',
-//     document.querySelector('.Store_store-tabs-wrapper__OfH4C')
-//   );
-// }, 5000);
-// html2canvas(document.querySelector('.Store_store-tabs-wrapper__OfH4C')).then(
-//   (canvas: any) => {
-//     var img = canvas.toDataURL('image/png');
-//     // 在这里你可以处理图片，例如显示、保存或发送到服务器
-//     console.log(img);
+console.warn('capture dom start1111');
+// (async () => {
+//   console.warn('capture dom start');
+//   if (typeof html2canvas === 'undefined') {
+//     await fetch(
+//       'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.js'
+//     )
+//       .then(response => response.text())
+//       .then(scriptContent => {
+//         eval(scriptContent);
+//       });
 //   }
-// );
-
-(async () => {
-  if (typeof html2canvas === 'undefined') {
-    await fetch(
-      'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.js'
-    )
-      .then(response => response.text())
-      .then(scriptContent => {
-        eval(scriptContent);
-      });
-  }
-
-  // 确保 html2canvas 加载完成
-  html2canvas(document.body).then(canvas => {
-    console.warn('canvas:', canvas);
-    var imgURL = canvas.toDataURL('image/png');
-    // 使用 canvas
-  });
-})();
+//   window.addEventListener('message', event => {
+//     console.warn('captureDom event:', event);
+//     if (event?.action === 'START_CAPTURE') {
+//       startCapture();
+//     }
+//   });
+//   const startCapture = () => {
+//     html2canvas(document.body).then(canvas => {
+//       var imgURL = canvas.toDataURL('image/png');
+//       window.postMessage(
+//         { action: 'END_CAPTURE', data: imgURL, from: 'CaptureDom' },
+//         '*'
+//       );
+//     });
+//   };
+// })();

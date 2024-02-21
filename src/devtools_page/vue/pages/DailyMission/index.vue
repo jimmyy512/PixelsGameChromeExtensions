@@ -2,6 +2,8 @@
   <div id="DailyMission">
     this is dasd
     {{ dailyImg }}
+
+    <img class="DailyImg" :src="dailyImg" alt="" />
     <el-button type="primary" @click="btnClick">Primary</el-button>
   </div>
 </template>
@@ -11,9 +13,12 @@ import { ref } from 'vue';
 let dailyImg = ref('');
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+  console.warn('devtool onMessage', request);
   if (request.from === 'content_script') {
-    dailyImg.value = request.message;
-    console.log('Received message from content_script:', request.message);
+    if (request.action === 'ChromeAction_END_CAPTURE') {
+      dailyImg.value = request.data;
+      console.log('Received message from content_script:', request.data);
+    }
   }
 });
 
@@ -27,4 +32,12 @@ const btnClick = () => {
 };
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+#DailyMission {
+  width: 100%;
+  .DailyImg {
+    width: 100%;
+    height: auto;
+  }
+}
+</style>
