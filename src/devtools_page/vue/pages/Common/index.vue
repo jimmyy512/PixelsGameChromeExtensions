@@ -30,15 +30,30 @@
       </el-col>
     </el-row> -->
 
+    <!-- 自動製作 -->
+    <el-row>
+      <el-col :span="12">
+        <el-button
+          type="primary"
+          v-if="!IsAutoMake"
+          @click="
+            goMake();
+            IsAutoMake = true;
+          "
+        >
+          開始自動製作
+        </el-button>
+        <el-button type="warning" v-if="IsAutoMake" @click="IsAutoMake = false">
+          停止自動製作
+        </el-button>
+      </el-col>
+    </el-row>
     <!-- 基本快速採集 -->
     <template v-for="(item, key) in TimeCountState" :key="key">
       <el-row align="middle">
         <!-- {{ CountCONF[key].name }} -->
-        <el-col :span="6">
+        <el-col :span="8">
           <div class="RowTitle">{{ CountCONF[key].name }}採集</div>
-        </el-col>
-
-        <el-col :span="6">
           <div class="resetBlock">
             <span class="resetBlockBtn" @click="resetTime(key)">
               計時重置
@@ -46,6 +61,8 @@
             </span>
           </div>
         </el-col>
+
+        <!-- <el-col :span="6"> </el-col> -->
 
         <el-col :span="12">
           <template v-if="TimeCountState[key].EndTimeStamp === -1">
@@ -77,8 +94,9 @@
               "
             >
               剩餘時間: <span>{{ item.DisplayLabel_CountDown }}</span>
-              <span class="FormatCountDown"
-                >({{ item.DisplayLabel_FormatCountDown }})</span
+              <span>-</span>
+              <span class="FormatCountDown">
+                ( {{ item.DisplayLabel_FormatCountDown }} )</span
               >
             </div>
           </template>
@@ -86,20 +104,29 @@
       </el-row>
     </template>
 
-    <!-- 自動製作 -->
+    <!-- 自定義計時器 -->
+
+    <template v-for="(item, key) in customizeData" :key="key">
+      <el-row>
+        <el-col :span="12"> {{ item }}</el-col>
+      </el-row>
+    </template>
+
     <el-row>
-      <el-col :span="12">
-        <el-button
-          type="success"
-          v-if="!IsAutoMake"
-          @click="
-            goMake();
-            IsAutoMake = true;
-          "
-          >開始自動製作
-        </el-button>
-        <el-button type="warning" v-if="IsAutoMake" @click="IsAutoMake = false"
-          >停止自動製作
+      <el-col :span="24" class="AddCountDowBlock">
+        <el-input
+          class="inputBlock"
+          v-model="customizeInputData.name"
+          placeholder="輸入備註"
+        />
+        <el-input
+          class="inputBlock"
+          v-model="customizeInputData.min"
+          placeholder="輸入分鐘"
+          type="number"
+        />
+        <el-button type="primary" @click="addToCustomizeData">
+          添加計時器
         </el-button>
       </el-col>
     </el-row>
@@ -113,6 +140,7 @@ import {
   onBeforeUnmount,
   reactive,
   ref,
+  Ref,
   watchEffect,
   initCustomFormatter,
 } from 'vue';
@@ -125,26 +153,51 @@ import { CountCONF, CountConfKey } from '@/conf/index';
 import SaveStorage from '@/utils/SaveStorage';
 
 interface CountData {
-  Stage: number;
   EndTimeStamp: number;
   DisplayLabel_CountDown: string;
   DisplayLabel_FormatCountDown: string;
-  DiffSeconds: number;
-  IsTriggerStart: boolean;
+  DiffSeconds: number; // 剩餘秒數
+  IsTriggerStart: boolean; // true時 會卡黃色按鈕狀態
 }
 
-const intervalEvent = setInterval(() => {
-  nowTimestamp.value = Date.now();
-}, 1000);
+interface CustomizeCountData extends CountData {
+  CustomizeName: string;
+  CustomizeMin: number;
+}
 
-const intervalEvent2 = setInterval(() => {
-  if (IsAutoMake.value) {
-    goMake();
-  }
-}, 5000);
+interface CustomizeInputData {
+  name: string | null;
+  min: number | null;
+}
+
+let customizeData: Ref<CustomizeCountData[]> = ref([]);
 
 let IsAutoMake = ref(false);
 const nowTimestamp = ref(Date.now());
+
+const customizeInputData = reactive<CustomizeInputData>({
+  name: null,
+  min: null,
+});
+
+const addToCustomizeData = () => {
+  if (customizeInputData.name && customizeInputData.min) {
+    let time = Date.now();
+    let EndTimeStamp = time + customizeInputData.min * 60 * 1000;
+    customizeData.value.push({
+      CustomizeName: customizeInputData.name,
+      CustomizeMin: Number(customizeInputData.min),
+      DiffSeconds: -1,
+      DisplayLabel_CountDown: '',
+      DisplayLabel_FormatCountDown: '',
+      EndTimeStamp: EndTimeStamp,
+      IsTriggerStart: false,
+    });
+
+    customizeInputData.min = null;
+    customizeInputData.name = null;
+  }
+};
 
 let cloudSaveTime = ref(-1);
 const cloudTimestampDisplay = computed(() => {
@@ -169,6 +222,16 @@ const cloudTimestampDisplay = computed(() => {
   }
 });
 
+const intervalEvent = setInterval(() => {
+  nowTimestamp.value = Date.now();
+}, 1000);
+
+const intervalEvent2 = setInterval(() => {
+  if (IsAutoMake.value) {
+    goMake();
+  }
+}, 5000);
+
 const goMake = () => {
   inspectWindowEval(
     `
@@ -187,7 +250,6 @@ const createTimeCountState = () => {
     if (Object.prototype.hasOwnProperty.call(CountCONF, key)) {
       console.warn('key as CountConfKey:', key as CountConfKey);
       state[key as CountConfKey] = {
-        Stage: 0,
         EndTimeStamp: -1,
         DisplayLabel_CountDown: '',
         DisplayLabel_FormatCountDown: '',
@@ -259,7 +321,7 @@ onMounted(() => {
             .toString()
             .padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds
             .toString()
-            .padStart(2, '0')} - `;
+            .padStart(2, '0')} `;
         }
       }
     });
@@ -288,7 +350,7 @@ const init = () => {
 #CommonPage {
   $MainTextColor: rgb(66, 185, 131);
   .RowTitle {
-    font-size: 16px;
+    font-size: 20px;
     font-weight: bold;
     display: flex;
     align-items: center;
@@ -312,6 +374,13 @@ const init = () => {
       &:hover {
         color: white;
       }
+    }
+  }
+
+  .AddCountDowBlock {
+    .inputBlock {
+      width: 100px;
+      margin-right: 10px;
     }
   }
 

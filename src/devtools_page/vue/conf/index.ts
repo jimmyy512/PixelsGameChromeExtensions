@@ -7,10 +7,10 @@ export const CountCONF = {
     name: '能量',
     CountDown: [28800], // 8h
   },
-  PumpKing: {
-    name: '南瓜',
-    CountDown: [10800, 2400], // 3h, 40m
-  },
+  // PumpKing: {
+  //   name: '南瓜',
+  //   CountDown: [10800, 2400], // 3h, 40m
+  // },
   Bee: {
     name: '蜜蜂',
     CountDown: [2700], // 45m
