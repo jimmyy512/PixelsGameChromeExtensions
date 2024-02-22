@@ -9,6 +9,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
+import SaveStorage from '@/utils/SaveStorage';
 let dailyImg = ref('');
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
@@ -16,6 +17,10 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.from === 'content_script') {
     if (request.action === 'ChromeAction_END_CAPTURE') {
       dailyImg.value = request.data;
+      SaveStorage.saveLocalStorage(
+        SaveStorage.LocalStorageKey.Daily_Task,
+        JSON.stringify(request.data)
+      );
       console.log('Received message from content_script:', request.data);
     }
   }
@@ -37,6 +42,16 @@ const startCapture = () => {
     tabId,
   });
 };
+
+onMounted(() => {
+  SaveStorage.loadLocalStorage(SaveStorage.LocalStorageKey.Daily_Task).then(
+    (result: any) => {
+      if (result) {
+        dailyImg.value = JSON.parse(result);
+      }
+    }
+  );
+});
 </script>
 
 <style lang="scss" scoped>

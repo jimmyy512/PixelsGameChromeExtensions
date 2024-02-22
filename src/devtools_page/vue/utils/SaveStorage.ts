@@ -3,9 +3,9 @@ import { ElMessage } from 'element-plus';
 enum LocalStorageKey {
   Fast_Count_State = 'Fast_Count_State',
   Customize_Count_State = 'Customize_Count_State',
-  Customize_Note = 'Customize_Note',
   Daily_Task = 'Daily_Task',
   Cloud_Save_Time_Stamp = 'Cloud_Save_Time_Stamp',
+  NoteList = 'NoteList',
 }
 
 export default class SaveStorage {
@@ -17,6 +17,7 @@ export default class SaveStorage {
       [key]: value,
     });
   }
+
   public static loadLocalStorage(key: LocalStorageKey): { [key: string]: any } {
     return new Promise((resolve, reject) => {
       chrome.storage.local.get(key, result => {

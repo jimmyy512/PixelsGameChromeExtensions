@@ -1,41 +1,52 @@
 <template>
   <div id="Note">
-    <el-row align="middle" v-for="(item, index) in displayData" :key="index">
-      <el-col :span="8">
-        <div class="RowTitle">{{ item.title }}</div>
-      </el-col>
-      <el-col :span="12" justify="start">
-        <el-button type="success" @click="clickHandler(item.content)"
-          >前往</el-button
-        >
-      </el-col>
-    </el-row>
-
-    <el-row>
-      <div class="info">任何廣告置入需求，請聯繫 Jim.</div>
-    </el-row>
+    <template v-for="(it, index) in NoteDataList" :key="index">
+      <el-input
+        v-model="it.textarea"
+        :rows="20"
+        type="textarea"
+        placeholder="輸入筆記..."
+        @blur="saveData()"
+      />
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-const clickHandler = (href: string) => {
-  window.open(href);
+import { ref, Ref, onMounted, initCustomFormatter } from 'vue';
+import SaveStorage from '@/utils/SaveStorage';
+interface NoteData {
+  textarea: string;
+}
+
+let NoteDataList: Ref<NoteData[]> = ref([]);
+
+const createNoteData = () => {
+  let tmp: NoteData = {
+    textarea: '',
+  };
+  return [tmp];
 };
-const displayData = ref([
-  {
-    title: '公司文件',
-    content: 'https://mgbilibili.atlassian.net/wiki/spaces/FT/pages/28639454',
-  },
-  {
-    title: '開發環境資訊',
-    content: 'https://mgbilibili.atlassian.net/wiki/spaces/FT/pages/27557979',
-  },
-  {
-    title: '3344 && 皇冠 && 捕魚',
-    content: 'https://mgbilibili.atlassian.net/wiki/spaces/FT/pages/30867497',
-  },
-]);
+
+const saveData = () => {
+  SaveStorage.saveLocalStorage(
+    SaveStorage.LocalStorageKey.NoteList,
+    JSON.stringify(NoteDataList.value)
+  );
+};
+
+onMounted(() => {
+  SaveStorage.loadLocalStorage(SaveStorage.LocalStorageKey.NoteList).then(
+    (result: any) => {
+      console.warn('result:', result);
+      if (result) {
+        NoteDataList.value = JSON.parse(result);
+      } else {
+        NoteDataList.value = createNoteData();
+      }
+    }
+  );
+});
 </script>
 
 <style scoped lang="scss">

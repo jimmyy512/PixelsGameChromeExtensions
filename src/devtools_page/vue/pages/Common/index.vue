@@ -143,7 +143,7 @@
             <template v-if="item.EndTimeStamp === -1">
               <el-button
                 type="success"
-                @click="startCountDown(item, item.CustomizeMin * 60)"
+                @click="startCountDown(item, (item.CustomizeMin ?? 0) * 60)"
                 v-if="!item.IsTriggerStart"
               >
                 開始計時

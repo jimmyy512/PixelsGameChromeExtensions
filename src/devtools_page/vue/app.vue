@@ -65,14 +65,19 @@ const tabs = [
     component: Common,
   },
   {
-    label: '市場',
-    name: 'Market',
-    component: Market,
+    label: '個人筆記',
+    name: 'Note',
+    component: Note,
   },
   {
     label: '每日任務',
     name: 'DailyMission',
     component: DailyMission,
+  },
+  {
+    label: '市場',
+    name: 'Market',
+    component: Market,
   },
   {
     label: '關於版本',
