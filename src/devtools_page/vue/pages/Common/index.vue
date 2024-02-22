@@ -48,13 +48,14 @@
         </el-button>
       </el-col>
     </el-row>
+
     <!-- 基本快速採集 -->
     <template v-for="(item, key, index) in TimeCountState" :key="key">
       <el-row align="middle">
         <el-col :span="8">
           <div class="RowTitle">{{ CountCONF[key].name }}採集</div>
           <div class="resetBlock">
-            <span class="resetBlockBtn" @click="resetTime(key)">
+            <span class="resetBlockBtn" @click="resetTime(item)">
               計時重置
               <el-icon><Refresh /></el-icon>
             </span>
@@ -91,7 +92,7 @@
               "
             >
               剩餘時間: <span>{{ item.DisplayLabel_CountDown }}</span>
-              <span>-</span>
+              <span>&nbsp;-&nbsp;</span>
               <span class="FormatCountDown">
                 ( {{ item.DisplayLabel_FormatCountDown }} )</span
               >
@@ -102,56 +103,119 @@
     </template>
 
     <!-- 自定義計時器 -->
-    <template v-for="(item, key) in customizeData" :key="key">
-      <el-row>
-        <el-col :span="8">
-          <div class="RowTitle">{{ item.CustomizeName }}</div>
-          <div class="resetBlock">
-            <span class="resetBlockBtn" @click="">
-              計時重置
-              <el-icon><Refresh /></el-icon>
-            </span>
-          </div>
-        </el-col>
+    <template v-for="(item, index) in customizeData" :key="index">
+      <!-- 正常顯示 -->
+      <template v-if="!item.IsEditMode">
+        <el-row>
+          <el-col :span="8">
+            <div class="RowTitle">{{ item.CustomizeName }}</div>
+            <div class="resetBlock">
+              <span class="customBtn resetBlockBtn" @click="resetTime(item)">
+                重置
+                <el-icon><Refresh /></el-icon>
+              </span>
+              <span
+                class="customBtn resetBlockBtn editBlockBtn"
+                @click="
+                  item.IsEditMode = true;
+                  item.EditName = item.CustomizeName;
+                  item.EditMin = item.CustomizeMin;
+                  saveData();
+                "
+              >
+                編輯
+                <el-icon><Edit /></el-icon>
+              </span>
+              <span
+                class="customBtn resetBlockBtn deleteBlockBtn"
+                @click="
+                  customizeData.splice(index, 1);
+                  saveData();
+                "
+              >
+                刪除
+                <el-icon><Delete /></el-icon>
+              </span>
+            </div>
+          </el-col>
 
-        <el-col :span="12">
-          <template v-if="item.EndTimeStamp === -1">
-            <el-button
-              type="success"
-              @click="startCountDown(item, item.CustomizeMin * 60)"
-              v-if="!item.IsTriggerStart"
-            >
-              開始計時
-            </el-button>
-            <el-button
-              type="warning"
+          <el-col :span="12">
+            <template v-if="item.EndTimeStamp === -1">
+              <el-button
+                type="success"
+                @click="startCountDown(item, item.CustomizeMin * 60)"
+                v-if="!item.IsTriggerStart"
+              >
+                開始計時
+              </el-button>
+              <el-button
+                type="warning"
+                @click="
+                  item.IsTriggerStart = false;
+                  saveData();
+                "
+                v-if="item.IsTriggerStart"
+              >
+                我知道了!
+              </el-button>
+            </template>
+            <template v-else>
+              <div
+                class="CustomRowContent"
+                :style="
+                  item.DiffSeconds < 180 && item.DiffSeconds >= 0
+                    ? 'color:#ec4747;'
+                    : ''
+                "
+              >
+                剩餘時間: <span>{{ item.DisplayLabel_CountDown }}</span>
+                <span>&nbsp;-&nbsp;</span>
+                <span class="FormatCountDown">
+                  ( {{ item.DisplayLabel_FormatCountDown }} )</span
+                >
+              </div>
+            </template>
+          </el-col>
+        </el-row>
+      </template>
+
+      <template v-if="item.IsEditMode">
+        <el-row>
+          <el-col :span="24" class="EditCountDownBlock">
+            <el-input
+              class="inputBlock"
+              v-model="item.EditName"
+              placeholder="編輯備註"
+            />
+            <el-input
+              class="inputBlock"
+              v-model="item.EditMin"
+              placeholder="編輯分鐘"
+              type="number"
+            />
+            <el-icon
+              class="EditActionBtn"
               @click="
-                item.IsTriggerStart = false;
+                item.CustomizeName = item.EditName;
+                item.CustomizeMin = item.EditMin;
+                item.IsEditMode = false;
                 saveData();
               "
-              v-if="item.IsTriggerStart"
             >
-              我知道了!
-            </el-button>
-          </template>
-          <template v-else>
-            <div
-              class="RowContent"
-              :style="
-                item.DiffSeconds < 180 && item.DiffSeconds >= 0
-                  ? 'color:#ec4747;'
-                  : ''
+              <Check />
+            </el-icon>
+            <el-icon
+              class="EditActionBtn CloseActionBtn"
+              @click="
+                item.IsEditMode = false;
+                saveData();
               "
             >
-              剩餘時間: <span>{{ item.DisplayLabel_CountDown }}</span>
-              <span>-</span>
-              <span class="FormatCountDown">
-                ( {{ item.DisplayLabel_FormatCountDown }} )</span
-              >
-            </div>
-          </template>
-        </el-col>
-      </el-row>
+              <Close />
+            </el-icon>
+          </el-col>
+        </el-row>
+      </template>
     </template>
 
     <el-row>
@@ -186,7 +250,14 @@ import {
   watchEffect,
   initCustomFormatter,
 } from 'vue';
-import { Upload, Download } from '@element-plus/icons-vue';
+import {
+  Upload,
+  Download,
+  Delete,
+  Edit,
+  Check,
+  Close,
+} from '@element-plus/icons-vue';
 import { useConf } from '@/store';
 import { ElMessage } from 'element-plus';
 import { Refresh, Message } from '@element-plus/icons-vue';
@@ -204,7 +275,10 @@ interface CountData {
 
 interface CustomizeCountData extends CountData {
   CustomizeName: string;
-  CustomizeMin: number;
+  CustomizeMin: number | null;
+  EditName: string; // 編輯名稱input
+  EditMin: number | null; // 編輯分鐘input
+  IsEditMode: boolean; // 是否為編輯模式
 }
 
 interface CustomizeInputData {
@@ -249,11 +323,20 @@ const addToCustomizeData = () => {
       DisplayLabel_CountDown: '',
       DisplayLabel_FormatCountDown: '',
       EndTimeStamp: EndTimeStamp,
-      IsTriggerStart: false,
+      IsTriggerStart: true,
+      EditName: '',
+      EditMin: null,
+      IsEditMode: false,
     });
 
     customizeInputData.min = null;
     customizeInputData.name = null;
+
+    console.warn('wtf:', customizeData.value);
+
+    saveData();
+  } else {
+    ElMessage.warning('檢查欄位是否都有正確填寫');
   }
 };
 
@@ -273,7 +356,6 @@ const createTimeCountState = () => {
   const state = {} as Record<CountConfKey, CountData>;
   for (const key in CountCONF) {
     if (Object.prototype.hasOwnProperty.call(CountCONF, key)) {
-      console.warn('key as CountConfKey:', key as CountConfKey);
       state[key as CountConfKey] = {
         EndTimeStamp: -1,
         DisplayLabel_CountDown: '',
@@ -298,11 +380,17 @@ const saveData = () => {
     SaveStorage.LocalStorageKey.Fast_Count_State,
     TimeCountState
   );
+
+  SaveStorage.saveLocalStorage(
+    SaveStorage.LocalStorageKey.Customize_Count_State,
+    JSON.stringify(customizeData.value)
+  );
 };
 
-const resetTime = (resetKey: CountConfKey) => {
-  TimeCountState[resetKey].EndTimeStamp = -1;
-  TimeCountState[resetKey].IsTriggerStart = false;
+const resetTime = (countData: CountData) => {
+  countData.EndTimeStamp = -1;
+  countData.IsTriggerStart = false;
+  saveData();
 };
 
 const cloudTimestampDisplay = computed(() => {
@@ -355,19 +443,35 @@ const countStateCalculate = (countData: CountData) => {
   }
 };
 
+const init = () => {
+  SaveStorage.loadLocalStorage(
+    SaveStorage.LocalStorageKey.Cloud_Save_Time_Stamp
+  ).then((result: any) => {
+    if (result) {
+      cloudSaveTime.value = result;
+    }
+  });
+};
+
 onMounted(() => {
   SaveStorage.loadLocalStorage(
     SaveStorage.LocalStorageKey.Fast_Count_State
   ).then((result: any) => {
-    // tmp
-    // const newState = result ? result : createTimeCountState();
-    const newState = createTimeCountState();
+    const newState = result ? result : createTimeCountState();
     for (const key in newState) {
       if (newState.hasOwnProperty(key)) {
         TimeCountState[key as CountConfKey] =
           newState[key as keyof typeof TimeCountState];
       }
     }
+
+    SaveStorage.loadLocalStorage(
+      SaveStorage.LocalStorageKey.Customize_Count_State
+    ).then((result: any) => {
+      if (result) {
+        customizeData.value = JSON.parse(result);
+      }
+    });
 
     watchEffect(() => {
       for (const key in TimeCountState) {
@@ -388,19 +492,11 @@ onBeforeUnmount(() => {
   clearInterval(intervalEvent);
   clearInterval(intervalEvent2);
 });
-
-const init = () => {
-  SaveStorage.loadLocalStorage(
-    SaveStorage.LocalStorageKey.Cloud_Save_Time_Stamp
-  ).then((result: any) => {
-    if (result) {
-      cloudSaveTime.value = result;
-    }
-  });
-};
 </script>
 
 <style scoped lang="scss">
+$CloseColor: rgb(245, 108, 108);
+$WarningColor: rgb(230, 162, 60);
 #CommonPage {
   $MainTextColor: rgb(66, 185, 131);
   .RowTitle {
@@ -412,10 +508,17 @@ const init = () => {
   .RowContent {
     font-size: 16px;
     color: white;
+    height: 100%;
+    display: flex;
+    align-items: center;
     .FormatCountDown {
       color: $MainTextColor;
     }
   }
+  .CustomRowContent {
+    @extend .RowContent;
+  }
+
   .el-row {
     margin-bottom: 20px;
   }
@@ -425,9 +528,21 @@ const init = () => {
     align-items: center;
     .resetBlockBtn {
       cursor: pointer;
+      color: rgb(64, 158, 255);
       &:hover {
         color: white;
       }
+    }
+    .editBlockBtn {
+      color: $WarningColor;
+    }
+    .deleteBlockBtn {
+      color: $CloseColor;
+    }
+    .customBtn {
+      margin-right: 12px;
+      display: flex;
+      align-items: center;
     }
   }
 
@@ -435,6 +550,23 @@ const init = () => {
     .inputBlock {
       width: 100px;
       margin-right: 10px;
+    }
+  }
+  .EditCountDownBlock {
+    @extend .AddCountDowBlock;
+    display: flex;
+    align-items: center;
+    .EditActionBtn {
+      cursor: pointer;
+      margin-right: 10px;
+      font-size: 20px;
+      font-weight: bold;
+      &:hover {
+        color: white;
+      }
+    }
+    .CloseActionBtn {
+      color: $CloseColor;
     }
   }
 
