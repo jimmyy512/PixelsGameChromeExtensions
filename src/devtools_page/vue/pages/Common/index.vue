@@ -1,35 +1,5 @@
 <template>
   <div id="CommonPage">
-    <!-- <el-row class="CloudSaveBlock">
-      <el-col :span="6">
-        <div class="topBlock">雲端存檔時間</div>
-        <div class="bottomBlock">
-          {{ cloudTimestampDisplay }}
-        </div>
-      </el-col>
-      <el-col :span="6">
-        <el-button
-          type="success"
-          size="small"
-          @click="SaveStorage.uploadSaveAllDataToCloudStorage"
-          :icon="Upload"
-        >
-          上傳存檔
-        </el-button>
-      </el-col>
-
-      <el-col :span="6">
-        <el-button
-          type="warning"
-          size="small"
-          @click="SaveStorage.downloadSaveAllDataFromCloudStorage"
-          :icon="Download"
-        >
-          讀取存檔
-        </el-button>
-      </el-col>
-    </el-row> -->
-
     <!-- 自動製作 -->
     <el-row>
       <el-col :span="12">
@@ -296,8 +266,6 @@ const customizeInputData = reactive<CustomizeInputData>({
   min: null,
 });
 
-let cloudSaveTime = ref(-1);
-
 const intervalEvent = setInterval(() => {
   nowTimestamp.value = Date.now();
 }, 1000);
@@ -393,28 +361,6 @@ const resetTime = (countData: CountData) => {
   saveData();
 };
 
-const cloudTimestampDisplay = computed(() => {
-  console.warn(
-    'cloudSaveTime:',
-    cloudSaveTime.value,
-    cloudSaveTime.value === -1
-  );
-  if (cloudSaveTime.value === -1) {
-    return '尚無讀取過雲端';
-  } else {
-    // 創建一個新的日期對象
-    const date = new Date(cloudSaveTime.value);
-
-    // 獲取月份、日期、小時和分鐘，並將其格式化（注意月份從0開始，所以要+1）
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-
-    return `${month}/${day} ${hours}:${minutes}`;
-  }
-});
-
 const countStateCalculate = (countData: CountData) => {
   let diffTime = countData.EndTimeStamp - nowTimestamp.value;
   countData.DiffSeconds = Math.floor(diffTime / 1000);
@@ -443,15 +389,7 @@ const countStateCalculate = (countData: CountData) => {
   }
 };
 
-const init = () => {
-  SaveStorage.loadLocalStorage(
-    SaveStorage.LocalStorageKey.Cloud_Save_Time_Stamp
-  ).then((result: any) => {
-    if (result) {
-      cloudSaveTime.value = result;
-    }
-  });
-};
+const init = () => {};
 
 onMounted(() => {
   SaveStorage.loadLocalStorage(

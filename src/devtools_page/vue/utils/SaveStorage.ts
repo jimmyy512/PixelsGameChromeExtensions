@@ -1,4 +1,6 @@
 import { ElMessage } from 'element-plus';
+import axios from '@/utils/axios';
+import ProjectConfig from '@/conf/ProjectConfig.json';
 
 enum LocalStorageKey {
   Fast_Count_State = 'Fast_Count_State',
@@ -41,12 +43,21 @@ export default class SaveStorage {
 
     console.warn('asd1:', DataToSave);
     console.warn('asd2:', JSON.stringify(DataToSave));
-    chrome.storage.sync.set(
-      { [SaveStorage.PixelGameSaveData]: DataToSave },
-      () => {
-        ElMessage.success('已上傳至雲端據');
-      }
-    );
+
+    console.warn('url:', `${ProjectConfig.CloudSaveURL}/write`);
+    return axios
+      .post(`${ProjectConfig.CloudSaveURL}/write`, {
+        Key: 'Jim',
+        SaveData: JSON.stringify(DataToSave),
+      })
+      .then(res => {
+        // chrome.storage.sync.set(
+        //   { [SaveStorage.PixelGameSaveData]: DataToSave },
+        //   () => {
+        //     ElMessage.success('已上傳至雲端據');
+        //   }
+        // );
+      });
   }
 
   public static async downloadSaveAllDataFromCloudStorage() {

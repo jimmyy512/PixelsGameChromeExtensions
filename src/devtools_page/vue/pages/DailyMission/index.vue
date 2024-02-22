@@ -13,7 +13,7 @@ import SaveStorage from '@/utils/SaveStorage';
 let dailyImg = ref('');
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-  console.warn('devtool onMessage', request);
+  // console.warn('devtool onMessage', request);
   if (request.from === 'content_script') {
     if (request.action === 'ChromeAction_END_CAPTURE') {
       dailyImg.value = request.data;
