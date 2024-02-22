@@ -6,8 +6,13 @@ enum LocalStorageKey {
   Fast_Count_State = 'Fast_Count_State',
   Customize_Count_State = 'Customize_Count_State',
   Daily_Task = 'Daily_Task',
-  Cloud_Save_Time_Stamp = 'Cloud_Save_Time_Stamp',
+  Cloud_Save_Info = 'Cloud_Save_Info',
   NoteList = 'NoteList',
+}
+
+export interface Cloud_Save_Info {
+  SaveKey: string;
+  SaveTime: number;
 }
 
 export default class SaveStorage {
@@ -41,22 +46,15 @@ export default class SaveStorage {
       );
     }
 
-    console.warn('asd1:', DataToSave);
-    console.warn('asd2:', JSON.stringify(DataToSave));
-
-    console.warn('url:', `${ProjectConfig.CloudSaveURL}/write`);
     return axios
-      .post(`${ProjectConfig.CloudSaveURL}/write`, {
+      .post(`${ProjectConfig.CloudSaveURL}/setData`, {
         Key: 'Jim',
         SaveData: JSON.stringify(DataToSave),
       })
       .then(res => {
-        // chrome.storage.sync.set(
-        //   { [SaveStorage.PixelGameSaveData]: DataToSave },
-        //   () => {
-        //     ElMessage.success('已上傳至雲端據');
-        //   }
-        // );
+        if (res.data?.message) {
+          ElMessage.success(`已上傳至雲端`);
+        }
       });
   }
 

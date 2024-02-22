@@ -1,13 +1,25 @@
 <template>
   <div id="AboutUs">
+    <el-row>
+      <el-col :span="12">
+        <div class="RowTitle">
+          <div>存檔英文代號: &nbsp;</div>
+          <el-input v-model="saveKeyInput" placeholder="存檔Key" @blur="" />
+        </div>
+      </el-col>
+    </el-row>
+
     <el-row class="CloudSaveBlock">
-      <el-col :span="6">
-        <div class="topBlock">雲端存檔時間</div>
+      <el-col :span="12">
+        <div class="topBlock">雲端存檔最後儲存時間:</div>
         <div class="bottomBlock">
           {{ cloudTimestampDisplay }}
         </div>
       </el-col>
-      <el-col :span="6">
+    </el-row>
+
+    <el-row>
+      <el-col :span="5">
         <el-button
           type="success"
           size="small"
@@ -18,7 +30,7 @@
         </el-button>
       </el-col>
 
-      <el-col :span="6">
+      <el-col :span="5">
         <el-button
           type="warning"
           size="small"
@@ -31,17 +43,17 @@
     </el-row>
 
     <el-row justify="start" align="middle">
-      <el-col :span="5">
+      <el-col :span="12">
         <div class="RowTitle">
-          當前版本號: <span class="VersionCode">{{ version }}</span>
+          當前版本號:&nbsp; <span class="VersionCode">{{ version }}</span>
         </div>
       </el-col>
     </el-row>
 
     <el-row justify="start" align="middle">
-      <el-col :span="5">
+      <el-col :span="12">
         <div class="RowTitle" :style="isNeedUpdate ? 'color:orange;' : ''">
-          線上版本號:
+          線上版本號:&nbsp;
           <span class="VersionCode">{{ ShowOnlineVersion }}</span>
         </div>
       </el-col>
@@ -62,10 +74,13 @@
 import { useConf } from '@/store';
 import { computed, ref } from 'vue';
 import ProjectConfig from '@/conf/ProjectConfig.json';
-import SaveStorage from '@/utils/SaveStorage';
+import SaveStorage, { Cloud_Save_Info } from '@/utils/SaveStorage';
+import { Upload, Download } from '@element-plus/icons-vue';
 
 // @ts-ignore
 const version = __Admine_VERSION__;
+
+let saveKeyInput = ref('');
 
 const ShowOnlineVersion = computed(() => {
   return useConf().onlineVersion;
@@ -77,6 +92,10 @@ const isNeedUpdate = computed(() => {
 
 const updateBtnClick = () => {
   window.open(ProjectConfig.UpdateDownloadURL);
+};
+
+const saveData = () => {
+  SaveStorage.saveLocalStorage(SaveStorage.LocalStorageKey.Cloud_Save_Info, {});
 };
 
 let cloudSaveTime = ref(-1);
@@ -103,13 +122,13 @@ const cloudTimestampDisplay = computed(() => {
   }
 });
 
-SaveStorage.loadLocalStorage(
-  SaveStorage.LocalStorageKey.Cloud_Save_Time_Stamp
-).then((result: any) => {
-  if (result) {
-    cloudSaveTime.value = result;
+SaveStorage.loadLocalStorage(SaveStorage.LocalStorageKey.Cloud_Save_Info).then(
+  (result: any) => {
+    if (result) {
+      cloudSaveTime.value = result;
+    }
   }
-});
+);
 </script>
 
 <style scoped lang="scss">
@@ -118,12 +137,31 @@ SaveStorage.loadLocalStorage(
   .el-row {
     margin-bottom: 20px;
   }
+  .RowTitle {
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+  }
   .info {
     color: orange;
   }
 
   .VersionCode {
     // color: skyblue;
+  }
+
+  .CloudSaveBlock {
+    display: flex;
+    align-items: center;
+    .topBlock {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .bottomBlock {
+      font-size: 16px;
+      color: rgb(64, 158, 255);
+    }
   }
 }
 </style>

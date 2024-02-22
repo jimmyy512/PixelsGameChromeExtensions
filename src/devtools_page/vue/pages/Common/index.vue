@@ -220,14 +220,7 @@ import {
   watchEffect,
   initCustomFormatter,
 } from 'vue';
-import {
-  Upload,
-  Download,
-  Delete,
-  Edit,
-  Check,
-  Close,
-} from '@element-plus/icons-vue';
+import { Delete, Edit, Check, Close } from '@element-plus/icons-vue';
 import { useConf } from '@/store';
 import { ElMessage } from 'element-plus';
 import { Refresh, Message } from '@element-plus/icons-vue';
@@ -505,16 +498,6 @@ $WarningColor: rgb(230, 162, 60);
     }
     .CloseActionBtn {
       color: $CloseColor;
-    }
-  }
-
-  .CloudSaveBlock {
-    display: flex;
-    align-items: center;
-    .topBlock {
-      font-weight: bold;
-    }
-    .bottomBlock {
     }
   }
 }

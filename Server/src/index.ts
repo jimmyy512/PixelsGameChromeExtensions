@@ -48,7 +48,6 @@ function updateDataAndWriteToFile(key: string, value: any) {
   readDataFromFile((currentData) => {
     // 更新指定key的值
     const updatedData = { ...currentData, [key]: value };
-    console.warn('cool');
     writeDataToFile(updatedData);
   });
 }
@@ -60,7 +59,7 @@ function queueWriteOperation(key: string, value: any) {
   }
 }
 
-app.post('/write', (req: Request, res: Response) => {
+app.post('/setData', (req: Request, res: Response) => {
   const { Key, SaveData } = req.body;
   if (Key === undefined || SaveData === undefined) {
     res.status(400).send('Key and value are required');
@@ -70,16 +69,16 @@ app.post('/write', (req: Request, res: Response) => {
   res.send({ message: 'Data is being updated and written to the file.' });
 });
 
-app.get('/read', (req: Request, res: Response) => {
-  const { key } = req.query;
-  if (!key) {
+app.get('/getData', (req: Request, res: Response) => {
+  const { Key } = req.query;
+  if (!Key) {
     res.status(400).send('Key is required');
     return;
   }
 
   readDataFromFile((data: any) => {
-    if (data.hasOwnProperty(key)) {
-      res.send({ [key as string]: data[key as string] });
+    if (data.hasOwnProperty(Key)) {
+      res.send({ [Key as string]: data[Key as string] });
     } else {
       res.status(404).send('Key not found');
     }
