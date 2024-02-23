@@ -4,6 +4,8 @@ services:
     build: .
     ports:
       - "3000:3000"
+    volumes:
+      - ./dist/data:/path/to/data
   nginx:
     image: nginx:latest
     ports:
@@ -12,3 +14,4 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - nodejs_app
+      
