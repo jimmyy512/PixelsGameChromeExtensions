@@ -1,15 +1,11 @@
 # 使用官方Node 18映像作为构建环境
-FROM node:18.17.1 as builder
-
+FROM node:18
 # 设置工作目录
 WORKDIR /usr/src/app
-
 # 复制package.json和package-lock.json
 COPY package*.json ./
-
 # 安装应用依赖，包括开发依赖用于构建
 RUN npm install
-
 # 复制应用源代码
 COPY . .
 
