@@ -5,7 +5,7 @@ import path from 'path';
 import AutoBackup from './AutoBackup';
 import ClearOldBackup from './ClearOldBackup';
 
-const port = 8780;
+const port = 3000;
 const app: Express = express();
 // 放寬傳輸限制
 app.use(bodyParser.json({ limit: '50mb' }));
