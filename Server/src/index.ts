@@ -2,6 +2,8 @@ import express, { Express, Request, Response } from 'express';
 import bodyParser from 'body-parser';
 import fs from 'fs';
 import path from 'path';
+import AutoBackup from './AutoBackup';
+import ClearOldBackup from './ClearOldBackup';
 
 const port = 8780;
 const app: Express = express();
@@ -9,7 +11,7 @@ const app: Express = express();
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
-const dataFilePath = path.join(__dirname, 'data.json');
+const dataFilePath = path.join(__dirname, '../data/data.json');
 const writeQueue: Array<() => void> = [];
 
 function processQueue() {
@@ -92,3 +94,7 @@ app.get('/getData', (req: Request, res: Response) => {
 app.listen(port, () => {
   console.log(`Server is listening on port ${port}`);
 });
+
+// 自動備份模組
+AutoBackup(); // 每60分鐘備份一次
+ClearOldBackup(); // 每1440分鐘清理一次
