@@ -10,6 +10,17 @@ const app: Express = express();
 // 放寬傳輸限制
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+// 跨網域
+app.all('*', function (req, res, next) {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header(
+    'Access-Control-Allow-Headers',
+    'Content-Type, Content-Length, Authorization, Accept, X-Requested-With , yourHeaderFeild'
+  );
+  res.header('Access-Control-Allow-Methods', 'PUT, POST, GET, DELETE, OPTIONS');
+  if (req.method == 'OPTIONS') res.send(200);
+  else next();
+});
 
 const dataFilePath = path.join(__dirname, './data/data.json');
 const writeQueue: Array<() => void> = [];
