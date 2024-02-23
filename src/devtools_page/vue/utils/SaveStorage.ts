@@ -69,7 +69,7 @@ export default class SaveStorage {
   }
 
   public static async downloadSaveAllDataFromCloudStorage(Key: string) {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       axios
         .get(`${ProjectConfig.CloudSaveURL}/getData`, {
           params: {
@@ -77,11 +77,8 @@ export default class SaveStorage {
           },
         })
         .then(res => {
-          console.warn('done:', res);
           if (res.data?.[Key]) {
-            console.warn('asaaaaa1', res.data[Key]);
             const cloudSaveData = JSON.parse(res.data[Key]);
-            console.warn('asaaaaa2', cloudSaveData);
             for (const storageKey in LocalStorageKey) {
               SaveStorage.saveLocalStorage(
                 storageKey as LocalStorageKey,
@@ -93,6 +90,7 @@ export default class SaveStorage {
             setTimeout(() => {
               location.reload();
             }, 3000);
+            resolve();
           } else {
             reject();
           }
@@ -103,22 +101,4 @@ export default class SaveStorage {
         });
     });
   }
-  //   chrome.storage.sync.get(SaveStorage.PixelGameSaveData, result => {
-  //     if (result) {
-  //       console.warn('downloadSaveAllDataFromCloudStorage:', result);
-  //       for (const key in LocalStorageKey) {
-  //         SaveStorage.saveLocalStorage(
-  //           key as LocalStorageKey,
-  //           result[SaveStorage.PixelGameSaveData][key]
-  //         );
-  //       }
-
-  //       ElMessage.success('已從雲端下載數據,重啟中...');
-  //       // location.reload();
-  //       resolve('downloadSaveAllDataFromCloudStorage success');
-  //     } else {
-  //       reject('downloadSaveAllDataFromCloudStorage error');
-  //     }
-  //   });
-  // });
 }
