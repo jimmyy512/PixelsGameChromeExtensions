@@ -97,6 +97,7 @@ export default class SaveStorage {
         })
         .catch(err => {
           console.error('err:', err);
+          ElMessage.warning(`無此存檔, 請確認存檔代號是否正確`);
           reject();
         });
     });

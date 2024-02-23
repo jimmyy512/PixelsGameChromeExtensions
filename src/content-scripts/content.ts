@@ -1,12 +1,13 @@
+import html2canvas from 'html2canvas';
 // 注入方法1
-function injectScript(file: any, node: any) {
-  var th = document.getElementsByTagName(node)[0];
-  var s = document.createElement('script');
-  s.setAttribute('type', 'text/javascript');
-  s.setAttribute('src', file);
-  th.appendChild(s);
-}
-injectScript(chrome.runtime.getURL('inject.js'), 'body');
+// function injectScript(file: any, node: any) {
+//   var th = document.getElementsByTagName(node)[0];
+//   var s = document.createElement('script');
+//   s.setAttribute('type', 'text/javascript');
+//   s.setAttribute('src', file);
+//   th.appendChild(s);
+// }
+// injectScript(chrome.runtime.getURL('inject.js'), 'body');
 
 // 监听来自background.js的消息
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
@@ -20,12 +21,14 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
 const startCaptureDailyMission = () => {
   const targetDomStr = '.Store_items-content__FtMRE';
-  if (document.querySelector(targetDomStr)) {
-    html2canvas(document.querySelector('.Store_items-content__FtMRE'), {
-      // html2canvas(document.querySelector('body'), {
-      backgroundColor: '#222044',
-      useCORS: true,
-    }).then((canvas: any) => {
+  if (html2canvas && document.querySelector(targetDomStr)) {
+    html2canvas(
+      document.querySelector('.Store_items-content__FtMRE') as HTMLElement,
+      {
+        backgroundColor: '#222044',
+        useCORS: true,
+      }
+    ).then((canvas: any) => {
       var imgURL = canvas.toDataURL('image/png');
       console.warn('imgURL:', imgURL);
       // 将数据发送到background script

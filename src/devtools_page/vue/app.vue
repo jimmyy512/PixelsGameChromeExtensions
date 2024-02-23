@@ -52,7 +52,7 @@ import AboutUs from '@/pages/AboutUs/index.vue';
 
 import Note from '@/pages/Note/index.vue';
 
-const activeName = ref('AboutUs');
+const activeName = ref('Common');
 
 useConf().init();
 

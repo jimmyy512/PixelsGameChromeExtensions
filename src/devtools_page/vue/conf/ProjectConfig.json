@@ -2,6 +2,6 @@
   "GoogleExcelURL": "https://docs.google.com/spreadsheets/d/16mhrzRPPwct9gmCHlG5tqw6mY2xfsWeICI_PdjJePuA/edit#gid=0",
   "UpdateDownloadURL": "https://drive.google.com/drive/folders/19O8_KQe5kVQJdtuLwuVyvPzNoKdL3u6O?usp=drive_link",
   "MarketIframeURL": "https://www.pixels.tips/market",
-  "CloudSaveURL": "http://localhost:3000",
+  "CloudSaveURL": "http://api.jimmy512.com/api",
   "IsNeedPWD": false
 }
