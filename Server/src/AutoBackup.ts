@@ -1,4 +1,3 @@
-import { ca } from 'element-plus/es/locale';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -16,7 +15,7 @@ const backupData = () => {
     return `${year}-${month}-${day}_${hour}_${minute}`;
   };
 
-  const sourcePath = path.join(__dirname, '../data/data.json');
+  const sourcePath = path.join(__dirname, './data/data.json');
 
   // 检查文件是否存在
   if (!fs.existsSync(sourcePath)) {

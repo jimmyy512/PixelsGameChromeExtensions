@@ -11,7 +11,7 @@ const app: Express = express();
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
-const dataFilePath = path.join(__dirname, '../data/data.json');
+const dataFilePath = path.join(__dirname, './data/data.json');
 const writeQueue: Array<() => void> = [];
 
 function processQueue() {
@@ -38,6 +38,15 @@ function readDataFromFile(callback: (data: any) => void) {
 }
 
 function writeDataToFile(updatedData: object) {
+  const dir = path.dirname(dataFilePath);
+
+  // 檢查目錄是否存在
+  if (!fs.existsSync(dir)) {
+    // 遞歸創建目錄
+    fs.mkdirSync(dir, { recursive: true });
+  }
+
+  // 現在目錄存在了，可以安全地寫入文件
   fs.writeFile(dataFilePath, JSON.stringify(updatedData, null, 2), (err) => {
     if (err) {
       console.error('Error writing file:', err);

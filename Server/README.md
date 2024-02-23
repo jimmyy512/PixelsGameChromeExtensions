@@ -1,4 +1,4 @@
-# ChatTG_Bot
+# Pixel 插件服務
 
 ## 簡介
 
@@ -14,4 +14,12 @@ npm i
 
 ## 啟動
 
+```
 npm run serve
+```
+
+## 啟動 docker 服務
+
+```
+docker-compose up --build
+```
