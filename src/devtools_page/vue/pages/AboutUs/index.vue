@@ -4,7 +4,12 @@
       <el-col :span="12">
         <div class="RowTitle">
           <div>存檔英文代號: &nbsp;</div>
-          <el-input v-model="saveKeyInput" placeholder="存檔Key" @blur="" />
+          <el-input
+            class="saveKeyInput"
+            v-model="saveKeyInput"
+            placeholder="存檔Key"
+            @blur="saveData"
+          />
         </div>
       </el-col>
     </el-row>
@@ -23,7 +28,7 @@
         <el-button
           type="success"
           size="small"
-          @click="SaveStorage.uploadSaveAllDataToCloudStorage"
+          @click="uploadBtnClick"
           :icon="Upload"
         >
           上傳存檔
@@ -34,7 +39,7 @@
         <el-button
           type="warning"
           size="small"
-          @click="SaveStorage.downloadSaveAllDataFromCloudStorage"
+          @click="downloadBtnClick"
           :icon="Download"
         >
           讀取存檔
@@ -76,6 +81,7 @@ import { computed, ref } from 'vue';
 import ProjectConfig from '@/conf/ProjectConfig.json';
 import SaveStorage, { Cloud_Save_Info } from '@/utils/SaveStorage';
 import { Upload, Download } from '@element-plus/icons-vue';
+import { ElMessage } from 'element-plus';
 
 // @ts-ignore
 const version = __Admine_VERSION__;
@@ -95,7 +101,10 @@ const updateBtnClick = () => {
 };
 
 const saveData = () => {
-  SaveStorage.saveLocalStorage(SaveStorage.LocalStorageKey.Cloud_Save_Info, {});
+  SaveStorage.saveLocalStorage(SaveStorage.LocalStorageKey.Cloud_Save_Info, {
+    SaveKey: saveKeyInput.value,
+    SaveTime: cloudSaveTime.value,
+  } as Cloud_Save_Info);
 };
 
 let cloudSaveTime = ref(-1);
@@ -122,10 +131,37 @@ const cloudTimestampDisplay = computed(() => {
   }
 });
 
+const uploadBtnClick = async () => {
+  if (saveKeyInput.value === '') {
+    ElMessage.warning('請先輸入存檔Key');
+    return;
+  }
+  cloudSaveTime.value = Date.now();
+  await SaveStorage.saveLocalStorage(
+    SaveStorage.LocalStorageKey.Cloud_Save_Info,
+    {
+      SaveKey: saveKeyInput.value,
+      SaveTime: cloudSaveTime.value,
+    } as Cloud_Save_Info
+  );
+  SaveStorage.uploadSaveAllDataToCloudStorage(saveKeyInput.value);
+};
+
+const downloadBtnClick = async () => {
+  if (saveKeyInput.value === '') {
+    ElMessage.warning('請先輸入存檔Key');
+    return;
+  }
+  SaveStorage.downloadSaveAllDataFromCloudStorage(saveKeyInput.value);
+};
+
 SaveStorage.loadLocalStorage(SaveStorage.LocalStorageKey.Cloud_Save_Info).then(
-  (result: any) => {
+  (result: Cloud_Save_Info) => {
     if (result) {
-      cloudSaveTime.value = result;
+      cloudSaveTime.value = result?.SaveTime;
+      saveKeyInput.value = result?.SaveKey;
+    } else {
+      console.warn('not find Cloud_Save_Info', result);
     }
   }
 );
@@ -142,6 +178,9 @@ SaveStorage.loadLocalStorage(SaveStorage.LocalStorageKey.Cloud_Save_Info).then(
     display: flex;
     align-items: center;
     white-space: nowrap;
+    .saveKeyInput {
+      width: 200px;
+    }
   }
   .info {
     color: orange;

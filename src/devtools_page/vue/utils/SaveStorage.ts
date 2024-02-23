@@ -19,9 +19,19 @@ export default class SaveStorage {
   private static PixelGameSaveData = 'PixelGameSaveData';
   public static LocalStorageKey = LocalStorageKey;
   public static cloudLastSaveTimeStamp = 0;
-  public static saveLocalStorage(key: LocalStorageKey, value: any) {
-    chrome.storage.local.set({
-      [key]: value,
+
+  public static saveLocalStorage(
+    key: LocalStorageKey,
+    value: any
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      chrome.storage.local.set({ [key]: value }, () => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+        } else {
+          resolve();
+        }
+      });
     });
   }
 
@@ -37,7 +47,7 @@ export default class SaveStorage {
     });
   }
 
-  public static async uploadSaveAllDataToCloudStorage() {
+  public static async uploadSaveAllDataToCloudStorage(Key: string) {
     let DataToSave: Record<string, any> = {};
 
     for (const key in LocalStorageKey) {
@@ -48,7 +58,7 @@ export default class SaveStorage {
 
     return axios
       .post(`${ProjectConfig.CloudSaveURL}/setData`, {
-        Key: 'Jim',
+        Key,
         SaveData: JSON.stringify(DataToSave),
       })
       .then(res => {
@@ -58,55 +68,57 @@ export default class SaveStorage {
       });
   }
 
-  public static async downloadSaveAllDataFromCloudStorage() {
+  public static async downloadSaveAllDataFromCloudStorage(Key: string) {
     return new Promise((resolve, reject) => {
-      chrome.storage.sync.get(SaveStorage.PixelGameSaveData, result => {
-        if (result) {
-          console.warn('downloadSaveAllDataFromCloudStorage:', result);
-          for (const key in LocalStorageKey) {
-            SaveStorage.saveLocalStorage(
-              key as LocalStorageKey,
-              result[SaveStorage.PixelGameSaveData][key]
-            );
-          }
+      axios
+        .get(`${ProjectConfig.CloudSaveURL}/getData`, {
+          params: {
+            Key,
+          },
+        })
+        .then(res => {
+          console.warn('done:', res);
+          if (res.data?.[Key]) {
+            console.warn('asaaaaa1', res.data[Key]);
+            const cloudSaveData = JSON.parse(res.data[Key]);
+            console.warn('asaaaaa2', cloudSaveData);
+            for (const storageKey in LocalStorageKey) {
+              SaveStorage.saveLocalStorage(
+                storageKey as LocalStorageKey,
+                cloudSaveData[storageKey]
+              );
+            }
+            ElMessage.success(`存檔下載完成...3秒後自動重啟插件`);
 
-          ElMessage.success('已從雲端下載數據,重啟中...');
-          // location.reload();
-          resolve('downloadSaveAllDataFromCloudStorage success');
-        } else {
-          reject('downloadSaveAllDataFromCloudStorage error');
-        }
-      });
+            setTimeout(() => {
+              location.reload();
+            }, 3000);
+          } else {
+            reject();
+          }
+        })
+        .catch(err => {
+          console.error('err:', err);
+          reject();
+        });
     });
   }
-
-  // public static getCloudStorage(key: LocalStorageKey): { [key: string]: any } {
-  //   return new Promise((resolve, reject) => {
-  //     chrome.storage.sync.get(key, result => {
-  //       if (result) {
-  //         resolve(result[key]);
-  //       } else {
-  //         reject('getCloudStorage error');
+  //   chrome.storage.sync.get(SaveStorage.PixelGameSaveData, result => {
+  //     if (result) {
+  //       console.warn('downloadSaveAllDataFromCloudStorage:', result);
+  //       for (const key in LocalStorageKey) {
+  //         SaveStorage.saveLocalStorage(
+  //           key as LocalStorageKey,
+  //           result[SaveStorage.PixelGameSaveData][key]
+  //         );
   //       }
-  //     });
-  //   });
-  // }
 
-  // public static saveCloudStorage(key: LocalStorageKey, value: any) {
-  //   chrome.storage.sync.set({ [key]: value }, function () {
-  //     console.log(`Data for account ${key} has been stored.`);
+  //       ElMessage.success('已從雲端下載數據,重啟中...');
+  //       // location.reload();
+  //       resolve('downloadSaveAllDataFromCloudStorage success');
+  //     } else {
+  //       reject('downloadSaveAllDataFromCloudStorage error');
+  //     }
   //   });
-  // }
-
-  // public static getCloudStorage(key: LocalStorageKey): { [key: string]: any } {
-  //   return new Promise((resolve, reject) => {
-  //     chrome.storage.sync.get(key, result => {
-  //       if (result) {
-  //         resolve(result[key]);
-  //       } else {
-  //         reject('getCloudStorage error');
-  //       }
-  //     });
-  //   });
-  // }
+  // });
 }

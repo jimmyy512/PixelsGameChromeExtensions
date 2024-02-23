@@ -36,7 +36,7 @@ onUnmounted(() => {
 
 const startCapture = () => {
   const tabId = chrome.devtools.inspectedWindow.tabId;
-  chrome.runtime.sendMessage({
+  chrome.runtime?.sendMessage({
     from: 'devtools',
     action: 'CaptureDailyMission',
     tabId,

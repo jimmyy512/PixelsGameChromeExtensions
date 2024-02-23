@@ -65,6 +65,8 @@ app.post('/setData', (req: Request, res: Response) => {
     res.status(400).send('Key and value are required');
     return;
   }
+
+  console.warn('setData receive key:', Key);
   queueWriteOperation(Key, SaveData);
   res.send({ message: 'Data is being updated and written to the file.' });
 });
@@ -75,6 +77,8 @@ app.get('/getData', (req: Request, res: Response) => {
     res.status(400).send('Key is required');
     return;
   }
+
+  console.warn('getData receive key:', Key);
 
   readDataFromFile((data: any) => {
     if (data.hasOwnProperty(Key)) {

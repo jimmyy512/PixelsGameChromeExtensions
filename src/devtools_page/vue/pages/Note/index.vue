@@ -38,7 +38,6 @@ const saveData = () => {
 onMounted(() => {
   SaveStorage.loadLocalStorage(SaveStorage.LocalStorageKey.NoteList).then(
     (result: any) => {
-      console.warn('result:', result);
       if (result) {
         NoteDataList.value = JSON.parse(result);
       } else {

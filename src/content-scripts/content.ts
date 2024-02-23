@@ -36,7 +36,7 @@ const startCaptureDailyMission = () => {
       });
     });
   } else {
-    console.log('Chrome DevTool: 尚未打開每日任務面板:', targetDomStr);
+    // console.log('Chrome DevTool: 尚未打開每日任務面板:', targetDomStr);
   }
 };
 
