@@ -48,6 +48,7 @@
     "activeTab",
     "webNavigation",
     "scripting",
-    "alarms"
+    "alarms",
+    "debugger"
   ]
 }

@@ -49,10 +49,10 @@ import Common from '@/pages/Common/index.vue';
 import Market from '@/pages/Market/index.vue';
 import DailyMission from '@/pages/DailyMission/index.vue';
 import AboutUs from '@/pages/AboutUs/index.vue';
-
 import Note from '@/pages/Note/index.vue';
+import BuyBot from '@/pages/BuyBot/index.vue';
 
-const activeName = ref('Common');
+const activeName = ref('BuyBot');
 
 useConf().init();
 
@@ -73,6 +73,11 @@ const tabs = [
     label: '每日任務',
     name: 'DailyMission',
     component: DailyMission,
+  },
+  {
+    label: '購買助手',
+    name: 'BuyBot',
+    component: BuyBot,
   },
   {
     label: '市場',

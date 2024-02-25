@@ -30,7 +30,6 @@ const startCaptureDailyMission = () => {
       }
     ).then((canvas: any) => {
       var imgURL = canvas.toDataURL('image/png');
-      console.warn('imgURL:', imgURL);
       // 将数据发送到background script
       chrome.runtime.sendMessage({
         from: 'content_script',

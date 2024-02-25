@@ -2,20 +2,33 @@
   <div id="CommonPage">
     <!-- 自動製作 -->
     <el-row>
-      <el-col :span="12">
-        <el-button
-          type="primary"
-          v-if="!IsAutoMake"
-          @click="
-            goMake();
-            IsAutoMake = true;
-          "
-        >
-          開始自動製作
-        </el-button>
-        <el-button type="warning" v-if="IsAutoMake" @click="IsAutoMake = false">
-          停止自動製作
-        </el-button>
+      <el-col :span="24">
+        <div class="FoodMakerRow">
+          <el-button
+            type="primary"
+            v-if="!IsAutoMake"
+            @click="
+              goMake();
+              IsAutoMake = true;
+            "
+          >
+            開始自動製作
+          </el-button>
+          <el-button
+            type="warning"
+            v-if="IsAutoMake"
+            @click="IsAutoMake = false"
+          >
+            停止自動製作
+          </el-button>
+
+          <div class="soundInfoLabel">料理中止音效</div>
+          <el-switch
+            v-model="IsTipSoundWithNoCraft"
+            :active-icon="Bell"
+            :inactive-icon="MuteNotification"
+          />
+        </div>
       </el-col>
     </el-row>
 
@@ -220,13 +233,21 @@ import {
   watchEffect,
   initCustomFormatter,
 } from 'vue';
-import { Delete, Edit, Check, Close } from '@element-plus/icons-vue';
+import {
+  Delete,
+  Edit,
+  Check,
+  Close,
+  Bell,
+  MuteNotification,
+} from '@element-plus/icons-vue';
 import { useConf } from '@/store';
 import { ElMessage } from 'element-plus';
 import { Refresh, Message } from '@element-plus/icons-vue';
 import { inspectWindowEval } from '@/utils/utils';
 import { CountCONF, CountConfKey } from '@/conf/index';
 import SaveStorage from '@/utils/SaveStorage';
+import soundFile from '@/sound/hint_2.mp3';
 
 interface CountData {
   EndTimeStamp: number;
@@ -252,6 +273,7 @@ interface CustomizeInputData {
 let customizeData: Ref<CustomizeCountData[]> = ref([]);
 
 let IsAutoMake = ref(false);
+let IsTipSoundWithNoCraft = ref(false);
 const nowTimestamp = ref(Date.now());
 
 const customizeInputData = reactive<CustomizeInputData>({
@@ -267,11 +289,39 @@ const intervalEvent2 = setInterval(() => {
   if (IsAutoMake.value) {
     goMake();
   }
+
+  checkIsBtnDisabled();
 }, 5000);
 
 let TimeCountState: Record<CountConfKey, CountData> = reactive(
   {} as Record<CountConfKey, CountData>
 );
+
+const checkIsBtnDisabled = () => {
+  inspectWindowEval(
+    `
+    window.Chrome_isBtnDisabled = () => {
+      let btn = document.querySelector(".Crafting_craftingButton__Qd6Ke");
+      if(btn && btn.innerText !== 'In Progress'){
+        return btn.disabled?'IsDisable':'NotDisable';
+      }
+      else{
+        return 'No Crafting Button';
+      }
+    };
+    window.Chrome_isBtnDisabled();
+    `
+  ).then((result: any) => {
+    if (result === 'IsDisable' && IsTipSoundWithNoCraft.value) {
+      playTipSound();
+    }
+  });
+};
+
+const playTipSound = () => {
+  const audio = new Audio(soundFile);
+  audio.play().catch(e => console.error('播放音效時發生錯誤:', e));
+};
 
 const addToCustomizeData = () => {
   if (customizeInputData.name && customizeInputData.min) {
@@ -293,8 +343,6 @@ const addToCustomizeData = () => {
     customizeInputData.min = null;
     customizeInputData.name = null;
 
-    console.warn('wtf:', customizeData.value);
-
     saveData();
   } else {
     ElMessage.warning('檢查欄位是否都有正確填寫');
@@ -304,10 +352,10 @@ const addToCustomizeData = () => {
 const goMake = () => {
   inspectWindowEval(
     `
-    window.goClick = () => {
+    window.Chrome_goClick = () => {
       document.querySelector(".Crafting_craftingButton__Qd6Ke").click();
     };
-    window.goClick();
+    window.Chrome_goClick();
     setTimeout(() => window.goClick(), 3000);
 `
   );
@@ -452,6 +500,21 @@ $WarningColor: rgb(230, 162, 60);
 
   .el-row {
     margin-bottom: 20px;
+  }
+
+  .FoodMakerRow {
+    display: flex;
+    align-items: center;
+    .el-switch {
+      margin-left: 10px;
+    }
+    .soundInfoLabel {
+      font-weight: bold;
+      font-size: 16px;
+    }
+    .el-button {
+      margin-right: 15px;
+    }
   }
 
   .resetBlock {
