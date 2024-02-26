@@ -6,7 +6,7 @@
         <el-input
           class="RowInput"
           v-model="buyBotParam.TargetItemIndex"
-          placeholder="(從0開始)"
+          placeholder="(從 1 開始)"
           type="number"
         />
       </div>
@@ -14,10 +14,10 @@
 
     <el-row>
       <div class="ParamRow">
-        <div class="RowTitle">目標可接受價格:</div>
+        <div class="RowTitle">目標可接受價格( 含以下 ):</div>
         <el-input
           class="RowInput"
-          v-model="buyBotParam.TargetItemIndex"
+          v-model="buyBotParam.TargetPrice"
           placeholder=""
           type="number"
           min="1"
@@ -27,7 +27,7 @@
 
     <el-row>
       <div class="ParamRow">
-        <div class="RowTitle">一次下單數量:</div>
+        <div class="RowTitle">購買總數( 買到的話此值會動態遞減 ):</div>
         <el-input
           class="RowInput"
           v-model="buyBotParam.TargetItemAmount"
@@ -39,12 +39,29 @@
     </el-row>
 
     <el-row>
-      <el-button type="primary" @click="test">測試</el-button>
-      <el-button type="primary" @click="sendInsertDivEvent">測試3</el-button>
+      <div class="ParamRow">
+        <div class="RowTitle">多少秒後自動重試( 非必要不用調整 ):</div>
+        <el-input
+          class="RowInput"
+          v-model="retryGapSec"
+          placeholder=""
+          type="number"
+          min="1"
+        />
+      </div>
+    </el-row>
 
-      <!--         
-      <el-button type="primary" @click="startBot">開始下單</el-button>
-      <el-button type="warning" @click="stopBot">停止下單</el-button> -->
+    <el-row>
+      <el-button
+        type="primary"
+        @click="preStartSendInsertDivEvent"
+        v-if="!isStartBot"
+      >
+        開始下單
+      </el-button>
+      <el-button type="warning" @click="stopBot" v-if="isStartBot">
+        停止下單
+      </el-button>
     </el-row>
   </div>
 </template>
@@ -52,10 +69,12 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import { inspectWindowEval } from '@/utils/utils';
+import { ElMessage } from 'element-plus';
 
-let isStartBot = false;
+let isStartBot = ref(false);
+let retryGapSec = 3;
 let buyBotParam = reactive({
-  TargetItemIndex: 1,
+  TargetItemIndex: 2,
   TargetPrice: 1,
   TargetItemAmount: 1,
 });
@@ -69,7 +88,7 @@ enum BuyBotStatus {
 }
 
 let buyBotStatus = BuyBotStatus.Ready;
-// let SelectPriceUntilDoneInterval: NodeJS.Timer;
+let waitBuyingResultInterval: NodeJS.Timeout;
 let SelectPriceUntilDoneTime = 0;
 const MAX_SELECT_PRICE_TRY = 50;
 const tabId = chrome.devtools.inspectedWindow.tabId;
@@ -83,11 +102,8 @@ chrome.runtime.onMessage.addListener(function (request: any, sender: any) {
   }
 });
 
-const test = () => {
-  preStartSendInsertDivEvent();
-};
-
 const preStartSendInsertDivEvent = () => {
+  resetAll();
   const tabId = chrome.devtools.inspectedWindow.tabId;
   chrome.runtime.sendMessage({
     from: 'devtools',
@@ -96,36 +112,60 @@ const preStartSendInsertDivEvent = () => {
   });
 };
 
+const resetAll = () => {
+  console.warn('last resetAll:', buyBotStatus);
+  SelectPriceUntilDoneTime = 0;
+  clearInterval(waitBuyingResultInterval);
+  buyBotStatus = BuyBotStatus.Ready;
+};
+
 const startBot = () => {
-  isStartBot = true;
-  OpenItemDetail();
+  if (buyBotParam.TargetItemAmount <= 0) {
+    ElMessage.success('目標數量已買完，請重新設定目標數量');
+    stopBot();
+  } else {
+    isStartBot.value = true;
+    OpenItemDetail();
+  }
 };
 
 const stopBot = () => {
+  isStartBot.value = false;
+};
+
+const reStart = () => {
+  resetAll();
   CloseDetailWindow();
+  setTimeout(() => {
+    if (isStartBot.value) {
+      startBot();
+    } else {
+      resetAll();
+    }
+  }, retryGapSec * 1000 + Math.floor(Math.random() * 201));
 };
 
 const OpenItemDetail = () => {
   buyBotStatus = BuyBotStatus.OpenItemDetail;
   inspectWindowEval(
     `
-    document.querySelectorAll(".Marketplace_item__l__LM")[${buyBotParam.TargetItemIndex}].querySelector(".Marketplace_viewListings__q_KfD").click();
+    document.querySelectorAll(".Marketplace_item__l__LM")[${
+      buyBotParam.TargetItemIndex - 1
+    }].querySelector(".Marketplace_viewListings__q_KfD").click();
     `
-  ).then(res => {
-    console.warn('OpenItemDetail res:', res);
-    SelectPriceUntilDone();
-  });
-};
-
-const resetAll = () => {
-  console.warn('last resetAll:', buyBotStatus);
-  SelectPriceUntilDoneTime = 0;
-  // clearInterval(SelectPriceUntilDoneInterval);
-  buyBotStatus = BuyBotStatus.Ready;
+  )
+    .then(res => {
+      console.warn('OpenItemDetail res:', res);
+      SelectPriceUntilDone();
+    })
+    .catch(err => {
+      ElMessage.error('找不到商品，請重新設定商品是第幾個');
+    });
 };
 
 const SelectPriceUntilDone = () => {
   buyBotStatus = BuyBotStatus.SelectPriceUntilDone;
+  console.warn('SelectPriceUntilDoneTime:', SelectPriceUntilDoneTime);
   SelectPriceUntilDoneTime++;
   inspectWindowEval(
     `
@@ -136,22 +176,94 @@ const SelectPriceUntilDone = () => {
     if (Chrome_listLength > 0) {
       buyBotStatus = BuyBotStatus.OpenItemDetailPriceClick;
       SelectPriceUntilDoneTime = 0;
-      await inspectWindowEval(
-        `
-          document.querySelectorAll(".MarketplaceItemListings_buyListing__jYwuF")[0].click();
-        `
-      );
-      forceInputFocus();
+      await inspectWindowEval(`
+      document.querySelectorAll(".MarketplaceItemListings_buyListing__jYwuF")[0].textContent
+      `).then(btnTextContent => {
+        if (btnTextContent) {
+          let itemPrice = +btnTextContent.match(/@ (\d+)/)[1];
+          if (itemPrice <= buyBotParam.TargetPrice) {
+            //符合目標價位 開始購買
+            // 點開價位
+            inspectWindowEval(
+              `
+                document.querySelectorAll(".MarketplaceItemListings_buyListing__jYwuF")[0].click();
+              `
+            );
+            forceInputFocus();
+            setTimeout(() => {
+              // 購買送出
+              inspectWindowEval(
+                `
+                  document.querySelectorAll(".MarketplaceItemListings_buyListing__jYwuF")[0].click();
+                `
+              );
+              WaitBuyingResult();
+            }, 300 + Math.floor(Math.random() * 101));
+          } else {
+            ElMessage.warning('沒有出現目標價位的商品，重新刷新中...');
+            setTimeout(() => {
+              reStart();
+            }, 500);
+          }
+        }
+      });
     } else {
       // 價格列表還沒出現 並且超過最大嘗試次數
       if (SelectPriceUntilDoneTime >= MAX_SELECT_PRICE_TRY) {
-        resetAll();
+        reStart();
       }
       setTimeout(() => {
         SelectPriceUntilDone();
       }, 100);
     }
   });
+};
+
+const WaitBuyingResult = () => {
+  console.warn('start waitBuy');
+  let buySuccessAmount = 0;
+  clearInterval(waitBuyingResultInterval);
+  waitBuyingResultInterval = setInterval(() => {
+    inspectWindowEval(`
+      window.Chrome_BuySuccessDomList = document.querySelectorAll('.Marketplace_prop__fTsfy');
+      if(window.Chrome_BuySuccessDomList.length>0){
+        window.Chrome_BuySuccessDomList[1].querySelector('span:nth-child(2)')?.textContent;
+      }
+      else{
+        "NotBuyYet"
+      }
+    `).then(res => {
+      if (res != 'NotBuyYet') {
+        clearInterval(waitBuyingResultInterval);
+        console.warn('res:', res);
+        buySuccessAmount = parseInt(res);
+        buyBotParam.TargetItemAmount -= buySuccessAmount;
+
+        // 關閉購買成功視窗
+        inspectWindowEval(`
+        document.querySelector(".Marketplace_button__x_SGP").click();
+        `);
+        //重新流程
+        reStart();
+        return;
+      } else {
+        console.warn('NotBuyYet');
+      }
+    });
+
+    inspectWindowEval(`
+      document.querySelector('.Notifications_text__ak1FH')?.textContent
+    `).then(res => {
+      if (res === 'marketplace-purchase-failed') {
+        clearInterval(waitBuyingResultInterval);
+        //重新流程
+        reStart();
+        return;
+      } else {
+        console.warn('NotBuyYet');
+      }
+    });
+  }, 500);
 };
 
 const forceInputFocus = () => {
@@ -217,9 +329,7 @@ const CloseDetailWindow = () => {
     `
     document.querySelector(".MarketplaceItemListings_container__Ta40D").querySelector(".commons_closeBtn__UobaL").click();
     `
-  ).then(res => {
-    console.warn('res:', res);
-  });
+  );
 };
 
 onMounted(() => {});
