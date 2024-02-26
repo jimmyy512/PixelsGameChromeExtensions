@@ -40,7 +40,7 @@
 
     <el-row>
       <el-button type="primary" @click="test">測試</el-button>
-      <el-button type="primary" @click="test3">測試3</el-button>
+      <el-button type="primary" @click="sendInsertDivEvent">測試3</el-button>
 
       <!--         
       <el-button type="primary" @click="startBot">開始下單</el-button>
@@ -69,7 +69,7 @@ enum BuyBotStatus {
 }
 
 let buyBotStatus = BuyBotStatus.Ready;
-let SelectPriceUntilDoneInterval: NodeJS.Timer | null = null;
+// let SelectPriceUntilDoneInterval: NodeJS.Timer;
 let SelectPriceUntilDoneTime = 0;
 const MAX_SELECT_PRICE_TRY = 50;
 const tabId = chrome.devtools.inspectedWindow.tabId;
@@ -78,20 +78,16 @@ chrome.runtime.onMessage.addListener(function (request: any, sender: any) {
   if (request.from === 'content_script' && sender?.url.startsWith('https')) {
     if (request.action === 'ChromeAction_END_FocusDivClick') {
       console.log('Received message from content_script:', request?.data);
-      test2();
+      startBot();
     }
   }
 });
 
 const test = () => {
-  console.warn('test');
-  setTimeout(() => {
-    console.warn('test2go');
-    test2();
-  }, 3000);
+  preStartSendInsertDivEvent();
 };
 
-const test3 = () => {
+const preStartSendInsertDivEvent = () => {
   const tabId = chrome.devtools.inspectedWindow.tabId;
   chrome.runtime.sendMessage({
     from: 'devtools',
@@ -99,140 +95,6 @@ const test3 = () => {
     tabId,
   });
 };
-const test2 = () => {
-  const tabId = chrome.devtools.inspectedWindow.tabId;
-  chrome.debugger.attach({ tabId: tabId }, '1.3', () => {
-    // 检查是否有错误
-    if (chrome.runtime.lastError) {
-      console.error(chrome.runtime.lastError.message);
-    }
-
-    inspectWindowEval(`document.querySelector(".html-ex input").focus();`).then(
-      res => {
-        console.warn('inspectWindowEval:', res);
-
-        fakeInput();
-      }
-    );
-  });
-};
-
-const fakeInput = () => {
-  // Step 1: 模拟 Ctrl + A 全选文本
-  const ctrlDownEvent = {
-    type: 'keyDown',
-    modifiers: 2, // 256 for Meta (Cmd) on Mac, 2 for Ctrl otherwise
-    windowsVirtualKeyCode: 65,
-    nativeVirtualKeyCode: 65,
-    macCharCode: 0,
-    key: 'a',
-  };
-
-  const ctrlUpEvent = { ...ctrlDownEvent, type: 'keyUp' };
-
-  chrome.debugger.sendCommand(
-    { tabId: tabId },
-    'Input.dispatchKeyEvent',
-    ctrlDownEvent,
-    () => {
-      chrome.debugger.sendCommand(
-        { tabId: tabId },
-        'Input.dispatchKeyEvent',
-        ctrlUpEvent,
-        () => {
-          // Step 2 (optional): 删除选中的文本，可能不需要这一步
-
-          // Step 3: 输入新文本
-          chrome.debugger.sendCommand(
-            { tabId: tabId },
-            'Input.insertText',
-            { text: '1' },
-            () => {
-              if (chrome.runtime.lastError) {
-                console.error(
-                  'Insert Text Error:',
-                  chrome.runtime.lastError.message
-                );
-              }
-            }
-          );
-        }
-      );
-    }
-  );
-};
-
-// // 附加调试器后，执行这个函数来聚焦并替换文本
-// function focusAndReplaceTextInInput(tabId, newText) {
-//   // 首先，聚焦到目标input元素
-//   chrome.scripting.executeScript(
-//     {
-//       target: { tabId: tabId },
-//       function: () => document.querySelector('.html-ex input').focus(),
-//     },
-//     () => {
-//       if (chrome.runtime.lastError) {
-//         console.error(
-//           'Execute script failed: ',
-//           chrome.runtime.lastError.message
-//         );
-//         return;
-//       }
-
-//       // 然后，模拟全选并插入新文本
-//       selectAllAndInsertText(tabId, newText);
-//     }
-//   );
-// }
-
-// function selectAllAndInsertText(tabId, newText) {
-//   // 模拟 Ctrl + A 全选文本
-//   const ctrlDownEvent = {
-//     type: 'keyDown',
-//     modifiers: 2, // 2 代表 Ctrl 键
-//     windowsVirtualKeyCode: 65,
-//     nativeVirtualKeyCode: 65,
-//     macCharCode: 0,
-//     key: 'A',
-//     code: 'KeyA',
-//   };
-
-//   const ctrlUpEvent = { ...ctrlDownEvent, type: 'keyUp' };
-
-//   chrome.debugger.sendCommand(
-//     { tabId: tabId },
-//     'Input.dispatchKeyEvent',
-//     ctrlDownEvent,
-//     () => {
-//       chrome.debugger.sendCommand(
-//         { tabId: tabId },
-//         'Input.dispatchKeyEvent',
-//         ctrlUpEvent,
-//         () => {
-//           // 在全选后插入新文本
-//           chrome.debugger.sendCommand(
-//             { tabId: tabId },
-//             'Input.insertText',
-//             { text: newText },
-//             () => {
-//               if (chrome.runtime.lastError) {
-//                 console.error(
-//                   'Insert Text Error:',
-//                   chrome.runtime.lastError.message
-//                 );
-//               }
-//             }
-//           );
-//         }
-//       );
-//     }
-//   );
-// }
-
-// const test = () => {
-//   // 示例：调用这个函数来替换文本
-//   focusAndReplaceTextInInput(tabId, '新的文本内容');
-// };
 
 const startBot = () => {
   isStartBot = true;
@@ -258,7 +120,7 @@ const OpenItemDetail = () => {
 const resetAll = () => {
   console.warn('last resetAll:', buyBotStatus);
   SelectPriceUntilDoneTime = 0;
-  clearInterval(SelectPriceUntilDoneInterval);
+  // clearInterval(SelectPriceUntilDoneInterval);
   buyBotStatus = BuyBotStatus.Ready;
 };
 
@@ -276,18 +138,10 @@ const SelectPriceUntilDone = () => {
       SelectPriceUntilDoneTime = 0;
       await inspectWindowEval(
         `
-            document.querySelectorAll(".MarketplaceItemListings_buyListing__jYwuF")[0].click();
+          document.querySelectorAll(".MarketplaceItemListings_buyListing__jYwuF")[0].click();
         `
       );
-      //   setTimeout(() => {
-      SelectPriceAmountInputFill();
-      //   await inspectWindowEval(
-      //     `
-      //         document.querySelectorAll(".MarketplaceItemListings_buyListing__jYwuF")[0].click();
-      //     `
-      //   );
-      //   }, 2000);
-      //   await SelectPriceAmountInputFill();
+      forceInputFocus();
     } else {
       // 價格列表還沒出現 並且超過最大嘗試次數
       if (SelectPriceUntilDoneTime >= MAX_SELECT_PRICE_TRY) {
@@ -300,15 +154,61 @@ const SelectPriceUntilDone = () => {
   });
 };
 
-const SelectPriceAmountInputFill = () => {
-  buyBotStatus = BuyBotStatus.SelectPriceAmountInputFill;
-  return inspectWindowEval(
-    `
-        window.Chrome_AmountInput = document.querySelector(".MarketplaceItemListings_amount__IyJRp").querySelector("input")
-        window.Chrome_AmountInput.value = ${buyBotParam.TargetItemAmount};
-        window.Chrome_AmountInput.dispatchEvent(new Event('input'));
-        window.Chrome_AmountInput.dispatchEvent(new Event('change'));
-    `
+const forceInputFocus = () => {
+  const tabId = chrome.devtools.inspectedWindow.tabId;
+  chrome.debugger.attach({ tabId: tabId }, '1.3', () => {
+    // 检查是否有错误
+    if (chrome.runtime.lastError) {
+      console.error(chrome.runtime.lastError.message);
+    }
+
+    inspectWindowEval(
+      `document.querySelector(".MarketplaceItemListings_amount__IyJRp").querySelector("input").focus();`
+    ).then(res => {
+      startAutoInputAmount();
+    });
+  });
+};
+
+const startAutoInputAmount = () => {
+  // Step 1: 模拟 Ctrl + A 全选文本
+  const ctrlDownEvent = {
+    type: 'keyDown',
+    modifiers: 2, // 256 for Meta (Cmd) on Mac, 2 for Ctrl otherwise
+    windowsVirtualKeyCode: 65,
+    nativeVirtualKeyCode: 65,
+    macCharCode: 0,
+    key: 'a',
+  };
+
+  const ctrlUpEvent = { ...ctrlDownEvent, type: 'keyUp' };
+
+  chrome.debugger.sendCommand(
+    { tabId: tabId },
+    'Input.dispatchKeyEvent',
+    ctrlDownEvent,
+    () => {
+      chrome.debugger.sendCommand(
+        { tabId: tabId },
+        'Input.dispatchKeyEvent',
+        ctrlUpEvent,
+        () => {
+          chrome.debugger.sendCommand(
+            { tabId: tabId },
+            'Input.insertText',
+            { text: buyBotParam.TargetItemAmount.toString() },
+            () => {
+              if (chrome.runtime.lastError) {
+                console.error(
+                  'Insert Text Error:',
+                  chrome.runtime.lastError.message
+                );
+              }
+            }
+          );
+        }
+      );
+    }
   );
 };
 
