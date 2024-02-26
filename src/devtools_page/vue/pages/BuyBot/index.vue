@@ -59,10 +59,11 @@
       >
         開始下單
       </el-button>
-      <el-button type="warning" @click="stopBot" v-if="isStartBot">
-        停止下單
-      </el-button>
     </el-row>
+
+    <div v-if="isStartBot" class="StopBotBlock" @click="isStartBot = false">
+      點我後停止下單
+    </div>
   </div>
 </template>
 
@@ -71,7 +72,7 @@ import { ref, reactive, onMounted } from 'vue';
 import { inspectWindowEval } from '@/utils/utils';
 import { ElMessage } from 'element-plus';
 
-let isStartBot = ref(false);
+let isStartBot = ref(true);
 let retryGapSec = 3;
 let buyBotParam = reactive({
   TargetItemIndex: 2,
@@ -347,6 +348,22 @@ onMounted(() => {});
     .RowInput {
       width: 100px;
     }
+  }
+
+  .StopBotBlock {
+    z-index: 99;
+    position: fixed;
+    top: 0;
+    left: 0;
+    cursor: pointer;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
   }
 }
 </style>

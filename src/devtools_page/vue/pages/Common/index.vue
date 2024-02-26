@@ -356,7 +356,7 @@ const goMake = () => {
       document.querySelector(".Crafting_craftingButton__Qd6Ke").click();
     };
     window.Chrome_goClick();
-    setTimeout(() => window.goClick(), 3000);
+    setTimeout(() => window.Chrome_goClick(), 2000);
 `
   );
 };
