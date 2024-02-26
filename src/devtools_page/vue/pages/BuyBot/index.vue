@@ -40,6 +40,7 @@
 
     <el-row>
       <el-button type="primary" @click="test">測試</el-button>
+      <el-button type="primary" @click="test3">測試3</el-button>
 
       <!--         
       <el-button type="primary" @click="startBot">開始下單</el-button>
@@ -49,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import { inspectWindowEval } from '@/utils/utils';
 
 let isStartBot = false;
@@ -72,12 +73,31 @@ let SelectPriceUntilDoneInterval: NodeJS.Timer | null = null;
 let SelectPriceUntilDoneTime = 0;
 const MAX_SELECT_PRICE_TRY = 50;
 const tabId = chrome.devtools.inspectedWindow.tabId;
+
+chrome.runtime.onMessage.addListener(function (request: any, sender: any) {
+  if (request.from === 'content_script' && sender?.url.startsWith('https')) {
+    if (request.action === 'ChromeAction_END_FocusDivClick') {
+      console.log('Received message from content_script:', request?.data);
+      test2();
+    }
+  }
+});
+
 const test = () => {
   console.warn('test');
   setTimeout(() => {
     console.warn('test2go');
     test2();
   }, 3000);
+};
+
+const test3 = () => {
+  const tabId = chrome.devtools.inspectedWindow.tabId;
+  chrome.runtime.sendMessage({
+    from: 'devtools',
+    action: 'InsertDivToFocus',
+    tabId,
+  });
 };
 const test2 = () => {
   const tabId = chrome.devtools.inspectedWindow.tabId;
@@ -301,6 +321,8 @@ const CloseDetailWindow = () => {
     console.warn('res:', res);
   });
 };
+
+onMounted(() => {});
 </script>
 
 <style lang="scss" scoped>
