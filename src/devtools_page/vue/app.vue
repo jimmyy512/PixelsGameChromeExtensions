@@ -52,7 +52,7 @@ import AboutUs from '@/pages/AboutUs/index.vue';
 import Note from '@/pages/Note/index.vue';
 import BuyBot from '@/pages/BuyBot/index.vue';
 
-const activeName = ref('BuyBot');
+const activeName = ref('Common');
 
 useConf().init();
 
@@ -60,22 +60,22 @@ onBeforeUnmount(() => {});
 
 const tabs = [
   {
-    label: '基本資訊',
+    label: '資訊',
     name: 'Common',
     component: Common,
   },
   {
-    label: '個人筆記',
+    label: '筆記',
     name: 'Note',
     component: Note,
   },
   {
-    label: '每日任務',
+    label: '任務',
     name: 'DailyMission',
     component: DailyMission,
   },
   {
-    label: '購買助手',
+    label: '助手',
     name: 'BuyBot',
     component: BuyBot,
   },
@@ -85,7 +85,7 @@ const tabs = [
     component: Market,
   },
   {
-    label: '關於版本',
+    label: '關於',
     name: 'AboutUs',
     component: AboutUs,
   },

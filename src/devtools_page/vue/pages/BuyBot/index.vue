@@ -72,10 +72,10 @@ import { ref, reactive, onMounted } from 'vue';
 import { inspectWindowEval } from '@/utils/utils';
 import { ElMessage } from 'element-plus';
 
-let isStartBot = ref(true);
+let isStartBot = ref(false);
 let retryGapSec = 3;
 let buyBotParam = reactive({
-  TargetItemIndex: 2,
+  TargetItemIndex: 1,
   TargetPrice: 1,
   TargetItemAmount: 1,
 });
@@ -212,6 +212,7 @@ const SelectPriceUntilDone = () => {
       // 價格列表還沒出現 並且超過最大嘗試次數
       if (SelectPriceUntilDoneTime >= MAX_SELECT_PRICE_TRY) {
         reStart();
+        return;
       }
       setTimeout(() => {
         SelectPriceUntilDone();
