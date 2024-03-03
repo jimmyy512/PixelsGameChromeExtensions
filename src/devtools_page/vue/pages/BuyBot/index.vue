@@ -256,13 +256,13 @@ const WaitBuyingResult = () => {
     inspectWindowEval(`
       document.querySelector('.Notifications_text__ak1FH')?.textContent
     `).then(res => {
-      if (res === 'marketplace-purchase-failed') {
+      if (res === 'marketplace-purchase-failed' || res === 'cannot-afford') {
         clearInterval(waitBuyingResultInterval);
         //重新流程
         reStart();
         return;
       } else {
-        console.warn('NotBuyYet');
+        console.warn('Notifications_text__ak1FH else', res);
       }
     });
   }, 500);
