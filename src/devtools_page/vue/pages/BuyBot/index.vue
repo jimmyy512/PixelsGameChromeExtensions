@@ -64,6 +64,58 @@
     <div v-if="isStartBot" class="StopBotBlock" @click="isStartBot = false">
       點我後停止下單
     </div>
+
+    <el-divider />
+
+    <el-row>
+      <div class="ParamRow" style="margin-right: 20px">
+        <div class="RowTitle">點擊X軸:</div>
+        <el-input
+          class="RowInput"
+          v-model="clickBotParam.ClickX"
+          placeholder="(從 1 開始)"
+          type="number"
+        />
+      </div>
+      <div class="ParamRow">
+        <div class="RowTitle">點擊Y軸:</div>
+        <el-input
+          class="RowInput"
+          v-model="clickBotParam.ClickY"
+          placeholder="(從 1 開始)"
+          type="number"
+        />
+      </div>
+    </el-row>
+
+    <el-row>
+      <div class="ParamRow" style="margin-right: 20px">
+        <div class="RowTitle">點擊間距( 毫秒 ):</div>
+        <el-input
+          class="RowInput"
+          v-model="clickBotParam.ClickInterval"
+          placeholder="(從 1 開始)"
+          type="number"
+        />
+      </div>
+      <div class="ParamRow">
+        <div class="RowTitle">間距亂數( 毫秒 ):</div>
+        <el-input
+          class="RowInput"
+          v-model="clickBotParam.RandomClickOffset"
+          placeholder="(從 1 開始)"
+          type="number"
+        />
+      </div>
+    </el-row>
+    <el-row>
+      <el-button type="primary" @click="startClickBot">
+        開始自動點擊
+      </el-button>
+      <el-button type="primary" @click="clearClickBot">
+        關閉自動點擊
+      </el-button>
+    </el-row>
   </div>
 </template>
 
@@ -80,6 +132,13 @@ let buyBotParam = reactive({
   TargetItemAmount: 1,
 });
 
+let clickBotParam = reactive({
+  ClickX: 600,
+  ClickY: 550,
+  ClickInterval: 500,
+  RandomClickOffset: 20,
+});
+
 enum BuyBotStatus {
   Ready,
   OpenItemDetail,
@@ -90,6 +149,7 @@ enum BuyBotStatus {
 
 let buyBotStatus = BuyBotStatus.Ready;
 let waitBuyingResultInterval: NodeJS.Timeout;
+let comboClickInterval: NodeJS.Timeout;
 let SelectPriceUntilDoneTime = 0;
 const MAX_SELECT_PRICE_TRY = 50;
 const tabId = chrome.devtools.inspectedWindow.tabId;
@@ -102,6 +162,65 @@ chrome.runtime.onMessage.addListener(function (request: any, sender: any) {
     }
   }
 });
+
+const startClickBot = () => {
+  const tabId = chrome.devtools.inspectedWindow.tabId;
+  chrome.debugger.attach({ tabId: tabId }, '1.3', () => {
+    // 检查是否有错误
+    if (chrome.runtime.lastError) {
+      console.error(chrome.runtime.lastError.message);
+    }
+
+    clearClickBot();
+    comboClickInterval = setInterval(() => {
+      botClick();
+    }, Number(clickBotParam.ClickInterval) + Math.floor(Math.random() * Number(clickBotParam.RandomClickOffset)));
+  });
+};
+
+const clearClickBot = () => {
+  clearInterval(comboClickInterval);
+};
+
+const botClick = () => {
+  const clickEvent = {
+    type: 'mousePressed',
+    button: 'left',
+    clickCount: 1,
+    x: Number(clickBotParam.ClickX), // 需要替換為元素的 x 座標
+    y: Number(clickBotParam.ClickY), // 需要替換為元素的 y 座標
+  };
+
+  const releaseEvent = {
+    ...clickEvent,
+    type: 'mouseReleased',
+  };
+
+  chrome.debugger.sendCommand(
+    { tabId: tabId },
+    'Input.dispatchMouseEvent',
+    clickEvent,
+    () => {
+      if (chrome.runtime.lastError) {
+        console.error('Mouse Click Error:', chrome.runtime.lastError.message);
+      } else {
+        chrome.debugger.sendCommand(
+          { tabId: tabId },
+          'Input.dispatchMouseEvent',
+          releaseEvent,
+          () => {
+            if (chrome.runtime.lastError) {
+              console.error(
+                'Mouse Release Error:',
+                chrome.runtime.lastError.message
+              );
+            }
+          }
+        );
+      }
+    }
+  );
+};
 
 const preStartSendInsertDivEvent = () => {
   resetAll();
