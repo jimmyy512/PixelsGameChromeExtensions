@@ -5,7 +5,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./dist/data:/path/to/data
+      - /root/backup_volume:/usr/src/app/dist/data
     networks:
       - mynetwork
   nginx:
