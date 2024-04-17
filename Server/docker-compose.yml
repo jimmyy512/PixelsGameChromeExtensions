@@ -1,24 +1,23 @@
 version: '3'
 services:
-  nodejs_app:
+  pixel-server:
     build: .
-    ports:
-      - "3000:3000"
     volumes:
       - /root/backup_volume:/usr/src/app/dist/data
     networks:
-      - mynetwork
-  nginx:
+      - main-network
+  pixel-server-nginx:
     image: nginx:latest
     ports:
-      - "80:80"
+      - "3101:80"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro # 确保你的 Nginx 配置文件被正确挂载到容器中
+      - ./var/log/nginx:/var/log/nginx
     depends_on:
-      - nodejs_app
+      - pixel-server
     networks:
-      - mynetwork
+      - main-network
       
 networks:
-  mynetwork:
-    driver: bridge # 定义网络类型
+  main-network:
+    external: true
