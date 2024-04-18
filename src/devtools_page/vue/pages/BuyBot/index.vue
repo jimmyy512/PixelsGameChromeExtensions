@@ -38,7 +38,7 @@
       </div>
     </el-row>
 
-    <el-row>
+    <!-- <el-row>
       <div class="ParamRow">
         <div class="RowTitle">多少秒後自動重試( 非必要不用調整 ):</div>
         <el-input
@@ -49,7 +49,7 @@
           min="1"
         />
       </div>
-    </el-row>
+    </el-row> -->
 
     <el-row>
       <el-button
@@ -64,6 +64,28 @@
     <div v-if="isStartBot" class="StopBotBlock" @click="isStartBot = false">
       點我後停止下單
     </div>
+
+    <el-divider />
+
+    <el-row>
+      <div class="ParamRow" style="margin-bottom: 0px">
+        <div class="RowTitle">多少分鐘後關閉料理:</div>
+        <el-input
+          style="width: 60px; margin-right: 20px"
+          class="RowInput"
+          v-model="cookIntervalCloseTime"
+          placeholder=""
+          type="number"
+          min="1"
+        />
+        <el-switch
+          v-model="isStartCookAutoClose"
+          class="ml-2"
+          style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
+          @change="cookAutoCloseChangeEvent"
+        />
+      </div>
+    </el-row>
 
     <el-divider />
 
@@ -108,7 +130,7 @@
         />
       </div>
     </el-row>
-    <el-row>
+    <el-row style="margin-bottom: 15px">
       <el-button type="primary" @click="startClickBot">
         開始自動點擊
       </el-button>
@@ -116,15 +138,37 @@
         關閉自動點擊
       </el-button>
     </el-row>
+    <el-row>
+      <div class="ParamRow">
+        <div class="RowTitle">
+          當前鼠標座標: (建議先打開瀏覽器偵錯,否則高度會有差異)
+        </div>
+        <div class="RowXYInfo">
+          X: <span>{{ mouseInfo.x }}</span> &nbsp; Y:
+          <span>{{ mouseInfo.y }}</span>
+        </div>
+      </div>
+    </el-row>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, onUnmounted } from 'vue';
 import { inspectWindowEval } from '@/utils/utils';
 import { ElMessage } from 'element-plus';
+import SaveStorage from '@/utils/SaveStorage';
+
+enum BuyBotStatus {
+  Ready,
+  OpenItemDetail,
+  SelectPriceUntilDone,
+  OpenItemDetailPriceClick,
+  SelectPriceAmountInputFill,
+}
 
 let isStartBot = ref(false);
+let cookIntervalCloseTime = ref(15);
+let isStartCookAutoClose = ref(false);
 let retryGapSec = 3;
 let buyBotParam = reactive({
   TargetItemIndex: 1,
@@ -139,17 +183,18 @@ let clickBotParam = reactive({
   RandomClickOffset: 20,
 });
 
-enum BuyBotStatus {
-  Ready,
-  OpenItemDetail,
-  SelectPriceUntilDone,
-  OpenItemDetailPriceClick,
-  SelectPriceAmountInputFill,
-}
+let mouseInfo = reactive({
+  x: 0,
+  y: 0,
+});
 
 let buyBotStatus = BuyBotStatus.Ready;
 let waitBuyingResultInterval: NodeJS.Timeout;
 let comboClickInterval: NodeJS.Timeout;
+let injectMouseEventInterval: NodeJS.Timeout;
+let updateMouseEventInterval: NodeJS.Timeout;
+let cookCloseEventInterval: NodeJS.Timeout;
+let saveEventInterval: NodeJS.Timeout;
 let SelectPriceUntilDoneTime = 0;
 const MAX_SELECT_PRICE_TRY = 50;
 const tabId = chrome.devtools.inspectedWindow.tabId;
@@ -271,7 +316,7 @@ const OpenItemDetail = () => {
     `
     document.querySelectorAll(".Marketplace_item__l__LM")[${
       buyBotParam.TargetItemIndex - 1
-    }].querySelector(".Marketplace_viewListings__q_KfD").click();
+    }].querySelector(".Marketplace_viewListings__q_KfD")?.click();
     `
   )
     .then(res => {
@@ -354,9 +399,9 @@ const WaitBuyingResult = () => {
         "NotBuyYet"
       }
     `).then(res => {
+      console.warn('WaitBuyingResult1 res:', res);
       if (res != 'NotBuyYet') {
         clearInterval(waitBuyingResultInterval);
-        console.warn('res:', res);
         buySuccessAmount = parseInt(res);
         buyBotParam.TargetItemAmount -= buySuccessAmount;
 
@@ -375,13 +420,19 @@ const WaitBuyingResult = () => {
     inspectWindowEval(`
       document.querySelector('.Notifications_text__ak1FH')?.textContent
     `).then(res => {
-      if (res === 'marketplace-purchase-failed' || res === 'cannot-afford') {
+      console.warn('WaitBuyingResult2 res:', res);
+      if (
+        res === 'marketplace-purchase-failed' ||
+        res === 'cannot-afford' ||
+        res === 'marketplace-already-sold' ||
+        res === 'marketplace-cooldown'
+      ) {
         clearInterval(waitBuyingResultInterval);
         //重新流程
         reStart();
         return;
       } else {
-        console.warn('Notifications_text__ak1FH else', res);
+        console.warn('Notifications_text__ak1FH else 可以來補判斷:', res);
       }
     });
   }, 500);
@@ -453,7 +504,107 @@ const CloseDetailWindow = () => {
   );
 };
 
-onMounted(() => {});
+const injectMouseEventInit = () => {
+  inspectWindowEval(
+    `
+      document.removeEventListener('mousemove', window.Chrome_handleMouseMove);
+      window.Chrome_handleMouseMove = (event)=> {
+        const mouseX = event.clientX;
+        const mouseY = event.clientY;
+        window.Chrome_mouseInfo = {x: mouseX, y: mouseY};
+      }
+      document.addEventListener('mousemove', window.Chrome_handleMouseMove);
+    `
+  );
+};
+
+const startCookAutoInterval = () => {
+  clearInterval(cookCloseEventInterval);
+  console.warn('start');
+  cookCloseEventInterval = setInterval(() => {
+    console.warn('click');
+    // 關閉料理按鈕點擊
+    inspectWindowEval(
+      `
+        document.querySelector('.Crafting_craftingCloseButton__ZbHQF')?.click();
+      `
+    );
+  }, cookIntervalCloseTime.value * 60 * 1000);
+};
+
+const cookAutoCloseChangeEvent = (state: boolean) => {
+  if (state) {
+    startCookAutoInterval();
+  } else {
+    clearInterval(cookCloseEventInterval);
+  }
+};
+
+const saveData = () => {
+  SaveStorage.saveLocalStorage(
+    SaveStorage.LocalStorageKey.BuyBot_Index,
+    buyBotParam.TargetItemIndex
+  );
+
+  SaveStorage.saveLocalStorage(
+    SaveStorage.LocalStorageKey.BuyBot_Price,
+    buyBotParam.TargetPrice
+  );
+
+  SaveStorage.saveLocalStorage(
+    SaveStorage.LocalStorageKey.BuyBot_Summary,
+    buyBotParam.TargetItemAmount
+  );
+};
+
+onMounted(async () => {
+  buyBotParam.TargetItemIndex =
+    Number(
+      await SaveStorage.loadLocalStorage(
+        SaveStorage.LocalStorageKey.BuyBot_Index
+      )
+    ) || 1;
+
+  buyBotParam.TargetPrice =
+    Number(
+      await SaveStorage.loadLocalStorage(
+        SaveStorage.LocalStorageKey.BuyBot_Price
+      )
+    ) || 1;
+
+  buyBotParam.TargetItemAmount =
+    Number(
+      await SaveStorage.loadLocalStorage(
+        SaveStorage.LocalStorageKey.BuyBot_Summary
+      )
+    ) || 1;
+
+  // 3秒注入一次鼠標監測初始化
+  injectMouseEventInterval = setInterval(() => {
+    injectMouseEventInit();
+  }, 3000);
+
+  saveEventInterval = setInterval(() => {
+    saveData();
+  }, 3000);
+
+  updateMouseEventInterval = setInterval(() => {
+    inspectWindowEval(`
+      window.Chrome_mouseInfo
+    `).then(res => {
+      mouseInfo.x = res.x;
+      mouseInfo.y = res.y;
+    });
+  }, 300);
+});
+
+onUnmounted(() => {
+  clearInterval(injectMouseEventInterval);
+  clearInterval(updateMouseEventInterval);
+  clearInterval(waitBuyingResultInterval);
+  clearInterval(comboClickInterval);
+  clearInterval(cookCloseEventInterval);
+});
 </script>
 
 <style lang="scss" scoped>
@@ -467,6 +618,14 @@ onMounted(() => {});
     }
     .RowInput {
       width: 100px;
+    }
+    .RowXYInfo {
+      font-size: 16px;
+      font-weight: bold;
+      // color: white;
+      span {
+        color: skyblue;
+      }
     }
   }
 

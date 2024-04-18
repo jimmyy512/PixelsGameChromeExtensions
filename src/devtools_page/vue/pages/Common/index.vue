@@ -353,7 +353,7 @@ const goMake = () => {
   inspectWindowEval(
     `
     window.Chrome_goClick = () => {
-      document.querySelector(".Crafting_craftingButton__Qd6Ke").click();
+      document.querySelector(".Crafting_craftingButton__Qd6Ke")?.click();
     };
     window.Chrome_goClick();
     setTimeout(() => window.Chrome_goClick(), 2000);

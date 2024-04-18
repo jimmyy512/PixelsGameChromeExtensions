@@ -65,9 +65,9 @@ const tabs = [
     component: Common,
   },
   {
-    label: '筆記',
-    name: 'Note',
-    component: Note,
+    label: '助手',
+    name: 'BuyBot',
+    component: BuyBot,
   },
   {
     label: '任務',
@@ -75,9 +75,9 @@ const tabs = [
     component: DailyMission,
   },
   {
-    label: '助手',
-    name: 'BuyBot',
-    component: BuyBot,
+    label: '筆記',
+    name: 'Note',
+    component: Note,
   },
   {
     label: '市場',

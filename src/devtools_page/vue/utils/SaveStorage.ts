@@ -8,6 +8,9 @@ enum LocalStorageKey {
   Daily_Task = 'Daily_Task',
   Cloud_Save_Info = 'Cloud_Save_Info',
   NoteList = 'NoteList',
+  BuyBot_Index = 'BuyBot_Index',
+  BuyBot_Price = 'BuyBot_Price',
+  BuyBot_Summary = 'BuyBot_Summary',
 }
 
 export interface Cloud_Save_Info {
