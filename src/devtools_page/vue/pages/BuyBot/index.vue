@@ -169,7 +169,7 @@ enum BuyBotStatus {
 let isStartBot = ref(false);
 let cookIntervalCloseTime = ref(15);
 let isStartCookAutoClose = ref(false);
-let retryGapSec = 3;
+let retryGapSec = 5;
 let buyBotParam = reactive({
   TargetItemIndex: 1,
   TargetPrice: 1,

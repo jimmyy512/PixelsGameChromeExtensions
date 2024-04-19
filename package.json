@@ -2,7 +2,7 @@
   "name": "Pixel-Chrome-dev-tools",
   "description": "Pixels Game 開發工具 Node v18.17.1",
   "private": true,
-  "version": "1.2.3",
+  "version": "1.2.4",
   "license": "MIT",
   "type": "module",
   "scripts": {
