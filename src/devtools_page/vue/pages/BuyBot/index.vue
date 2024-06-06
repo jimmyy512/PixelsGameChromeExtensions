@@ -3,38 +3,21 @@
     <el-row>
       <div class="ParamRow">
         <div class="RowTitle">購買商品列表中第幾個商品:</div>
-        <el-input
-          class="RowInput"
-          v-model="buyBotParam.TargetItemIndex"
-          placeholder="(從 1 開始)"
-          type="number"
-        />
+        <el-input class="RowInput" v-model="buyBotParam.TargetItemIndex" placeholder="(從 1 開始)" type="number" />
       </div>
     </el-row>
 
     <el-row>
       <div class="ParamRow">
         <div class="RowTitle">目標可接受價格( 含以下 ):</div>
-        <el-input
-          class="RowInput"
-          v-model="buyBotParam.TargetPrice"
-          placeholder=""
-          type="number"
-          min="1"
-        />
+        <el-input class="RowInput" v-model="buyBotParam.TargetPrice" placeholder="" type="number" min="1" />
       </div>
     </el-row>
 
     <el-row>
       <div class="ParamRow">
         <div class="RowTitle">購買總數( 買到的話此值會動態遞減 ):</div>
-        <el-input
-          class="RowInput"
-          v-model="buyBotParam.TargetItemAmount"
-          placeholder="(從1開始)"
-          type="number"
-          min="1"
-        />
+        <el-input class="RowInput" v-model="buyBotParam.TargetItemAmount" placeholder="(從1開始)" type="number" min="1" />
       </div>
     </el-row>
 
@@ -52,11 +35,7 @@
     </el-row> -->
 
     <el-row>
-      <el-button
-        type="primary"
-        @click="preStartSendInsertDivEvent"
-        v-if="!isStartBot"
-      >
+      <el-button type="primary" @click="preStartSendInsertDivEvent" v-if="!isStartBot">
         開始下單
       </el-button>
     </el-row>
@@ -70,20 +49,10 @@
     <el-row>
       <div class="ParamRow" style="margin-bottom: 0px">
         <div class="RowTitle">多少分鐘後關閉料理:</div>
-        <el-input
-          style="width: 60px; margin-right: 20px"
-          class="RowInput"
-          v-model="cookIntervalCloseTime"
-          placeholder=""
-          type="number"
-          min="1"
-        />
-        <el-switch
-          v-model="isStartCookAutoClose"
-          class="ml-2"
-          style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949"
-          @change="cookAutoCloseChangeEvent"
-        />
+        <el-input style="width: 60px; margin-right: 20px" class="RowInput" v-model="cookIntervalCloseTime"
+          placeholder="" type="number" min="1" @change="cookAutoCloseChangeEvent(isStartCookAutoClose)" />
+        <el-switch v-model="isStartCookAutoClose" class="ml-2"
+          style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949" @change="cookAutoCloseChangeEvent" />
       </div>
     </el-row>
 
@@ -92,42 +61,22 @@
     <el-row>
       <div class="ParamRow" style="margin-right: 20px">
         <div class="RowTitle">點擊X軸:</div>
-        <el-input
-          class="RowInput"
-          v-model="clickBotParam.ClickX"
-          placeholder="(從 1 開始)"
-          type="number"
-        />
+        <el-input class="RowInput" v-model="clickBotParam.ClickX" placeholder="(從 1 開始)" type="number" />
       </div>
       <div class="ParamRow">
         <div class="RowTitle">點擊Y軸:</div>
-        <el-input
-          class="RowInput"
-          v-model="clickBotParam.ClickY"
-          placeholder="(從 1 開始)"
-          type="number"
-        />
+        <el-input class="RowInput" v-model="clickBotParam.ClickY" placeholder="(從 1 開始)" type="number" />
       </div>
     </el-row>
 
     <el-row>
       <div class="ParamRow" style="margin-right: 20px">
         <div class="RowTitle">點擊間距( 毫秒 ):</div>
-        <el-input
-          class="RowInput"
-          v-model="clickBotParam.ClickInterval"
-          placeholder="(從 1 開始)"
-          type="number"
-        />
+        <el-input class="RowInput" v-model="clickBotParam.ClickInterval" placeholder="(從 1 開始)" type="number" />
       </div>
       <div class="ParamRow">
         <div class="RowTitle">間距亂數( 毫秒 ):</div>
-        <el-input
-          class="RowInput"
-          v-model="clickBotParam.RandomClickOffset"
-          placeholder="(從 1 開始)"
-          type="number"
-        />
+        <el-input class="RowInput" v-model="clickBotParam.RandomClickOffset" placeholder="(從 1 開始)" type="number" />
       </div>
     </el-row>
     <el-row style="margin-bottom: 15px">
@@ -223,13 +172,22 @@ const startClickBot = () => {
 
     clearClickBot();
     comboClickInterval = setInterval(() => {
-      botClick();
+      closePlayerProfile();
+      setTimeout(() => {
+        botClick();
+      }, 10);
     }, Number(clickBotParam.ClickInterval) + Math.floor(Math.random() * Number(clickBotParam.RandomClickOffset)));
   });
 };
 
 const clearClickBot = () => {
   clearInterval(comboClickInterval);
+};
+
+const closePlayerProfile = () => {
+  inspectWindowEval(`
+    document.querySelector('.Profile_closeButton__1n0Um')?.click();
+  `);
 };
 
 const botClick = () => {
@@ -319,8 +277,7 @@ const OpenItemDetail = () => {
   buyBotStatus = BuyBotStatus.OpenItemDetail;
   inspectWindowEval(
     `
-    document.querySelectorAll(".Marketplace_item__l__LM")[${
-      buyBotParam.TargetItemIndex - 1
+    document.querySelectorAll(".Marketplace_item__l__LM")[${buyBotParam.TargetItemIndex - 1
     }].querySelector(".Marketplace_viewListings__q_KfD")?.click();
     `
   )
@@ -557,7 +514,6 @@ const startCookAutoInterval = () => {
   clearInterval(cookCloseEventInterval);
   console.warn('start');
   cookCloseEventInterval = setInterval(() => {
-    console.warn('click');
     // 關閉料理按鈕點擊
     inspectWindowEval(
       `

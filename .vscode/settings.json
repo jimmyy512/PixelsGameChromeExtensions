@@ -12,10 +12,11 @@
       "url": "https://json.schemastore.org/chrome-manifest.json"
     }
   ],
-  "cSpell.words": [
-    "Eumns"
-  ],
+  "cSpell.words": ["Eumns"],
   "[ignore]": {
     "editor.defaultFormatter": "foxundermoon.shell-format"
+  },
+  "[vue]": {
+    "editor.defaultFormatter": "Vue.volar"
   }
 }
