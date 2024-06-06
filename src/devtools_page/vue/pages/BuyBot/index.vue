@@ -153,8 +153,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted } from 'vue';
-import { inspectWindowEval } from '@/utils/utils';
+import { ref, reactive, onMounted, onUnmounted, watch } from 'vue';
+import { inspectWindowEval, itemPriceToNumber } from '@/utils/utils';
 import { ElMessage } from 'element-plus';
 import SaveStorage from '@/utils/SaveStorage';
 
@@ -167,7 +167,7 @@ enum BuyBotStatus {
 }
 
 let isStartBot = ref(false);
-let cookIntervalCloseTime = ref(15);
+let cookIntervalCloseTime = ref(1);
 let isStartCookAutoClose = ref(false);
 let retryGapSec = 5;
 let buyBotParam = reactive({
@@ -177,8 +177,12 @@ let buyBotParam = reactive({
 });
 
 let clickBotParam = reactive({
-  ClickX: 600,
-  ClickY: 550,
+  ClickX: localStorage.getItem('ClickX')
+    ? Number(localStorage.getItem('ClickX'))
+    : 600,
+  ClickY: localStorage.getItem('ClickY')
+    ? Number(localStorage.getItem('ClickY'))
+    : 550,
   ClickInterval: 500,
   RandomClickOffset: 20,
 });
@@ -198,6 +202,7 @@ let saveEventInterval: NodeJS.Timeout;
 let SelectPriceUntilDoneTime = 0;
 const MAX_SELECT_PRICE_TRY = 50;
 const tabId = chrome.devtools.inspectedWindow.tabId;
+const BuyItemListClass = 'MarketplaceItemListings_buyListing__jYwuF';
 
 chrome.runtime.onMessage.addListener(function (request: any, sender: any) {
   if (request.from === 'content_script' && sender?.url.startsWith('https')) {
@@ -328,50 +333,80 @@ const OpenItemDetail = () => {
     });
 };
 
-const SelectPriceUntilDone = () => {
+const buyItemDetail = async (index: any) => {
+  inspectWindowEval(`
+      document.querySelectorAll(".${BuyItemListClass}")[${index}].textContent
+      `).then(btnTextContent => {
+    if (btnTextContent) {
+      let itemPrice = itemPriceToNumber(btnTextContent);
+      if (itemPrice <= buyBotParam.TargetPrice) {
+        //符合目標價位 開始購買
+        // 點開價位
+        inspectWindowEval(
+          `
+                document.querySelectorAll(".${BuyItemListClass}")[${index}].click();
+              `
+        );
+        forceInputFocus();
+        setTimeout(() => {
+          // 購買送出
+          inspectWindowEval(
+            `
+                  document.querySelectorAll(".${BuyItemListClass}")[${index}].click();
+                `
+          );
+          WaitBuyingResult();
+        }, 300 + Math.floor(Math.random() * 101));
+      } else {
+        ElMessage.warning('沒有出現目標價位的商品，重新刷新中...');
+        setTimeout(() => {
+          reStart();
+        }, 500);
+      }
+    }
+  });
+};
+
+const SelectPriceUntilDone = async () => {
   buyBotStatus = BuyBotStatus.SelectPriceUntilDone;
   console.warn('SelectPriceUntilDoneTime:', SelectPriceUntilDoneTime);
   SelectPriceUntilDoneTime++;
   inspectWindowEval(
     `
-        window.Chrome_listLength = document.querySelectorAll(".MarketplaceItemListings_buyListing__jYwuF").length;
+        window.Chrome_listLength = document.querySelectorAll(".${BuyItemListClass}").length;
     `
   ).then(async Chrome_listLength => {
     // 價格列表已經出現
     if (Chrome_listLength > 0) {
       buyBotStatus = BuyBotStatus.OpenItemDetailPriceClick;
       SelectPriceUntilDoneTime = 0;
-      await inspectWindowEval(`
-      document.querySelectorAll(".MarketplaceItemListings_buyListing__jYwuF")[0].textContent
-      `).then(btnTextContent => {
-        if (btnTextContent) {
-          let itemPrice = +btnTextContent.match(/@ (\d+)/)[1];
-          if (itemPrice <= buyBotParam.TargetPrice) {
-            //符合目標價位 開始購買
-            // 點開價位
-            inspectWindowEval(
-              `
-                document.querySelectorAll(".MarketplaceItemListings_buyListing__jYwuF")[0].click();
-              `
-            );
-            forceInputFocus();
-            setTimeout(() => {
-              // 購買送出
-              inspectWindowEval(
-                `
-                  document.querySelectorAll(".MarketplaceItemListings_buyListing__jYwuF")[0].click();
-                `
-              );
-              WaitBuyingResult();
-            }, 300 + Math.floor(Math.random() * 101));
-          } else {
-            ElMessage.warning('沒有出現目標價位的商品，重新刷新中...');
-            setTimeout(() => {
-              reStart();
-            }, 500);
-          }
-        }
-      });
+
+      let secondItemTextContent = await inspectWindowEval(`
+      document.querySelectorAll(".${BuyItemListClass}")[1].textContent
+      `);
+
+      let isSecondItemButtonDisabled = await inspectWindowEval(`
+      document.querySelectorAll(".MarketplaceItemListings_buyListing__jYwuF")[1].disabled
+      `);
+
+      let secondItemTextContentPrice = itemPriceToNumber(secondItemTextContent);
+
+      console.warn(
+        'secondItemTextContentPrice:',
+        secondItemTextContentPrice,
+        isSecondItemButtonDisabled
+      );
+
+      // 第二個選項商品價格小於目標價格,並且不是disabled
+      // 就買第二個商品,否則買第一個商品
+      if (
+        secondItemTextContentPrice <= buyBotParam.TargetPrice &&
+        !isSecondItemButtonDisabled
+      ) {
+        buyItemDetail(1);
+      } else {
+        buyItemDetail(0);
+      }
     } else {
       // 價格列表還沒出現 並且超過最大嘗試次數
       if (SelectPriceUntilDoneTime >= MAX_SELECT_PRICE_TRY) {
@@ -558,6 +593,20 @@ const saveData = () => {
 };
 
 onMounted(async () => {
+  // 監聽 ClickX 和 ClickY 的變動，並將它們寫入 localStorage
+  watch(
+    () => clickBotParam.ClickX,
+    newValue => {
+      localStorage.setItem('ClickX', newValue.toString());
+    }
+  );
+
+  watch(
+    () => clickBotParam.ClickY,
+    newValue => {
+      localStorage.setItem('ClickY', newValue.toString());
+    }
+  );
   buyBotParam.TargetItemIndex =
     Number(
       await SaveStorage.loadLocalStorage(
@@ -611,17 +660,21 @@ onUnmounted(() => {
 #BuyBotPage {
   .ParamRow {
     margin-bottom: 20px;
+
     .RowTitle {
       font-size: 16px;
       font-weight: bold;
       margin-bottom: 7px;
     }
+
     .RowInput {
       width: 100px;
     }
+
     .RowXYInfo {
       font-size: 16px;
       font-weight: bold;
+
       // color: white;
       span {
         color: skyblue;

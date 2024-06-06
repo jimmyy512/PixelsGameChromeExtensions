@@ -73,3 +73,13 @@ export const compareVersion = (currentVersion: string, newVersion: string) => {
 
   return false; // versions are equal
 };
+
+export const itemPriceToNumber = (btnTextContent: string) => {
+  const matchResult = btnTextContent.match(/@ (\d+)/);
+  if (matchResult) {
+    return +matchResult[1];
+  } else {
+    // 處理沒有匹配到的情況，例如返回 0 或者拋出錯誤
+    return 0;
+  }
+};
