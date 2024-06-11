@@ -23,7 +23,7 @@ const backupData = () => {
     return; // 如果文件不存在，则退出函数
   }
 
-  const backupPath = path.join(__dirname, `../data/data-${getFormattedTimestamp()}.json`);
+  const backupPath = path.join(__dirname, `./data/data-${getFormattedTimestamp()}.json`);
 
   fs.copyFile(sourcePath, backupPath, (err) => {
     if (err) {
@@ -34,6 +34,6 @@ const backupData = () => {
   });
 };
 
-// 设置定时器
-setInterval(() => backupData(), backupIntervalMinutes * 60 * 1000);
+// 设置定时器,每小時備份一次
+setInterval(() => backupData(), backupIntervalMinutes * 3600 * 1000);
 export default backupData;
