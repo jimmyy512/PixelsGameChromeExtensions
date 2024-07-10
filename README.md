@@ -4,7 +4,7 @@
 
 </div>
 
-# Pixel 鏈遊輔助插件 簡介
+# Pixels 鏈遊輔助插件
 
 遊戲連結:  
 https://play.pixels.xyz/
@@ -12,7 +12,7 @@ https://play.pixels.xyz/
 插件下載連結:  
 https://drive.google.com/drive/folders/19O8_KQe5kVQJdtuLwuVyvPzNoKdL3u6O
 
-專案針對 Pixel 區塊鏈遊戲開發 Chrome 輔助插件,  
+專案針對 Pixels 區塊鏈遊戲開發 Chrome 輔助插件,  
 利用 Vue3 開發插件介面,  
 並利用 NodeJS 紀錄玩家的存檔
 
