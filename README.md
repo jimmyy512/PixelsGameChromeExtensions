@@ -90,8 +90,7 @@ https://drive.google.com/drive/folders/19O8_KQe5kVQJdtuLwuVyvPzNoKdL3u6O
    1. 網址輸入 `chrome://extensions`
    2. 打開 `開發人員模式`
    3. 選擇 `載入未封裝項目` 並且選擇 `dist` 目錄
-
-   ![loading unpacked extension](./ReadMeImg/load-unpacked-extension.png)
+      ![loading unpacked extension](./ReadMeImg/load-unpacked-extension.png)
 
 4. 完成
 
@@ -103,4 +102,5 @@ https://drive.google.com/drive/folders/19O8_KQe5kVQJdtuLwuVyvPzNoKdL3u6O
    1. 網址輸入 `chrome://extensions`
    2. 打開 `開發人員模式`
    3. 選擇 `載入未封裝項目` 並且選擇 `prod` 目錄
-      ![loading unpacked extension](load-unpacked-extension.png)
+      ![loading unpacked extension](./ReadMeImg/load-unpacked-extension.png)
+3. 完成
