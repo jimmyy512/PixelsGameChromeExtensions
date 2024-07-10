@@ -53,6 +53,33 @@ https://drive.google.com/drive/folders/19O8_KQe5kVQJdtuLwuVyvPzNoKdL3u6O
   並且根據購買的狀態,  
   來得知此次購買為成功或是失敗
 
+## 插件安裝教學
+
+1. 下載最新版本壓縮檔  
+   插件下載連結:  
+   https://drive.google.com/drive/folders/19O8_KQe5kVQJdtuLwuVyvPzNoKdL3u6O
+
+2. 解壓縮檔案
+
+3. Chrome 打開擴充插件選單  
+   Chrome 網址貼上
+
+   ```
+   chrome://extensions/
+   ```
+
+4. 安裝插件  
+   ![alt text](./ReadMeImg/Install.png)
+
+   1. 打開 開發人員模式
+   2. 點擊 載入未封裝項目
+   3. 選擇解壓縮後的插件目錄
+
+5. 開始使用
+   ![alt text](./ReadMeImg/InstallDone.png)
+   記得開啟新的 ChromeTab,  
+   可以把 PixelsGame 標籤拖曳到最前面方便使用.
+
 ## 本地開發流程
 
 0. NodeJS 版本 v18.17.1
