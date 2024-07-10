@@ -17,6 +17,7 @@ build
 *.sw?
 
 tsconfig.tsbuildinfo
+tsconfig.tsbuildinfo.json
 secrets/*
 !secrets/generate-secrets.sh
 prod

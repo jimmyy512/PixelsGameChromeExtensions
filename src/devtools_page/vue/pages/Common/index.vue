@@ -222,6 +222,7 @@
   </div>
 </template>
 <script setup lang="ts">
+import ProjectConfig from '@/conf/ProjectConfig.json';
 import {
   computed,
   onMounted,

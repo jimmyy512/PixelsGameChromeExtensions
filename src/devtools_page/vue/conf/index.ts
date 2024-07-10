@@ -5,7 +5,7 @@ export const CountCONF = {
   },
   Energy: {
     name: '能量',
-    CountDown: [28800], // 8h
+    CountDown: [21600], // 6h
   },
   // PumpKing: {
   //   name: '南瓜',
