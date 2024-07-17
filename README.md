@@ -23,13 +23,13 @@ https://drive.google.com/drive/folders/19O8_KQe5kVQJdtuLwuVyvPzNoKdL3u6O
   除了幾個基本的計時器,使用者也能自行添加計時器.
   ![alt text](./ReadMeImg/CountDown.png)
 
-- 自動料理
+- 自動料理  
   此遊戲料理可能每幾分鐘要手動按下製作按鈕,  
   此插件每 0.5 秒 會幫玩家自動按下料理按鈕,  
   並且當料理結束時插件會發出提示音.  
   ![alt text](./ReadMeImg/AutoCook.png)
 
-- 點擊助手
+- 點擊助手  
   此插件可以隨時偵測用戶鼠標 X Y 座標,  
   用戶可以手動填入 X Y 位子,  
   讓腳本根據 X Y 位子做連動的動作.
