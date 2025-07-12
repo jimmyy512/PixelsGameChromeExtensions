@@ -51,6 +51,7 @@ import DailyMission from '@/pages/DailyMission/index.vue';
 import AboutUs from '@/pages/AboutUs/index.vue';
 import Note from '@/pages/Note/index.vue';
 import BuyBot from '@/pages/BuyBot/index.vue';
+import ClickBot from '@/pages/ClickBot/index.vue';
 
 const activeName = ref('Common');
 
@@ -65,7 +66,12 @@ const tabs = [
     component: Common,
   },
   {
-    label: '助手',
+    label: '點擊助手',
+    name: 'ClickBot',
+    component: ClickBot,
+  },
+  {
+    label: '購買助手',
     name: 'BuyBot',
     component: BuyBot,
   },

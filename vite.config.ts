@@ -11,6 +11,11 @@ manifest.version = packageJson.version;
 export default ({ mode }: { mode: string }) => {
   const env = loadEnv(mode, process.cwd());
   return defineConfig({
+    server: {
+      watch: {
+        ignored: ['**/dist/**', '**/public/**', '**/manifest.json'],
+      },
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src/devtools_page/vue'),
