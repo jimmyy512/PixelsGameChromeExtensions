@@ -8,13 +8,14 @@
   "scripts": {
     "start": "vite",
     "build": "vue-tsc --noEmit && vite build",
-    "buildf": "vue-tsc --noEmit && vite build --force",
+    "buildf": "vue-tsc --noEmit && vite optimize --force && vite build",
     "package": "npm run build && node build.js",
     "test": "vitest",
     "lint": "yarn run eslint --ext .js,.ts,.vue,.jsx src/",
     "prettier": "prettier --write '**/*.{js,jsx,ts,tsx,json,css,scss,md,vue}'"
   },
   "dependencies": {
+    "@vueuse/core": "^14.3.0",
     "axios": "^1.10.0",
     "element-plus": "^2.10.4",
     "html2canvas": "^1.4.1",

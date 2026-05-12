@@ -48,47 +48,48 @@ export const useConf = defineStore('confStore', {
       });
     },
     getOnlineGoogleExcelConf() {
+      // 將一般編輯網址轉為匯出 TSV 格式的網址
+      const exportUrl = ProjectConfig.GoogleExcelURL.replace(
+        /\/edit.*$/,
+        '/export?format=tsv&gid=0'
+      );
+
       return axios
-        .get(ProjectConfig.GoogleExcelURL, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
+        .get(exportUrl)
         .then(res => {
           if (res?.data) {
-            const parser = new DOMParser();
-            const htmlDoc = parser.parseFromString(res.data, 'text/html');
+            let data: any = null;
 
-            (window as any).gg = htmlDoc;
-            // 選擇具有指定屬性的 meta 元素
-            const metaElement = htmlDoc.querySelector(
-              'meta[property="og:description"][content]'
-            );
+            // 如果 Axios 已經自動將其解析為 JSON (因為回傳剛好是合法的 JSON 字串)
+            if (typeof res.data === 'object') {
+              data = res.data;
+            } else {
+              // 如果是純文字內容，則手動分割成行
+              const contentValue = String(res.data);
+              const lines = contentValue.split('\n');
 
-            if (metaElement) {
-              // 獲取 meta 元素的 content 屬性值
-              let contentValue = metaElement.getAttribute('content');
-
-              // 將字符串分割成行
-              const lines = contentValue?.split('\n');
-
-              // 如果有至少一行，選擇最後一行（索引為 lines.length - 1），並去除首尾空格
               if (lines && lines.length >= 1) {
                 let jsonStr = lines[lines.length - 1].trim();
-                // data 是 google excel 上的 object
-                let data = JSON.parse(jsonStr);
-                this.onlineCorrectPWD = data.PWD;
-                this.onlineVersion = data.Version;
-
-                // 驗證登入密碼
-                if (this.onlineCorrectPWD === localLoginPWD) {
-                  this.isAccess = true;
+                
+                // 處理 TSV 可能包含的引號
+                if (jsonStr.startsWith('"') && jsonStr.endsWith('"')) {
+                  jsonStr = jsonStr.substring(1, jsonStr.length - 1).replace(/""/g, '"');
                 }
+                
+                data = JSON.parse(jsonStr);
               } else {
                 throw new Error('未找到足夠的行');
               }
-            } else {
-              throw new Error('未找到符合條件的 meta 元素');
+            }
+
+            if (data) {
+              this.onlineCorrectPWD = data.PWD;
+              this.onlineVersion = data.Version;
+
+              // 驗證登入密碼
+              if (this.onlineCorrectPWD === localLoginPWD) {
+                this.isAccess = true;
+              }
             }
           }
         })

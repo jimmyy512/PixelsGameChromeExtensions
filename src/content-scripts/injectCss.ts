@@ -3,10 +3,10 @@
  * Generally it is not needed as content.css is loaded automagically by
  * Chrome when loading page.
  */
-import * as css from './content.css';
+import css from './content.css?inline';
 
 export default function vitalyLoadCss() {
   const style = document.createElement('style');
-  style.innerHTML = css.default;
+  style.innerHTML = css;
   document.body.appendChild(style);
 }

@@ -1,7 +1,6 @@
 import { defineStore } from "pinia";
 
-export const useAppStore = defineStore({
-    id: 'appStore',
+export const useAppStore = defineStore('appStore', {
 
     state: () => ({
         domain: 'yourDefaultDomainHere', // 你的預設domain
@@ -14,8 +13,7 @@ export const useAppStore = defineStore({
     },
 });
 
-export const useLoginStore = defineStore({
-    id: 'loginStore',
+export const useLoginStore = defineStore('loginStore', {
 
     state: () => ({
         isBackstageLogin: false,

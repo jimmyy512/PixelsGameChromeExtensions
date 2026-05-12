@@ -53,7 +53,7 @@ import Note from '@/pages/Note/index.vue';
 import BuyBot from '@/pages/BuyBot/index.vue';
 import ClickBot from '@/pages/ClickBot/index.vue';
 
-const activeName = ref('Common');
+const activeName = ref('ClickBot');
 
 useConf().init();
 
@@ -61,14 +61,14 @@ onBeforeUnmount(() => {});
 
 const tabs = [
   {
-    label: '資訊',
-    name: 'Common',
-    component: Common,
-  },
-  {
     label: '點擊助手',
     name: 'ClickBot',
     component: ClickBot,
+  },
+  {
+    label: '資訊',
+    name: 'Common',
+    component: Common,
   },
   {
     label: '購買助手',

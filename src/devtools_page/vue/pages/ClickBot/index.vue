@@ -95,11 +95,12 @@
 
 <script setup lang="ts">
 import { ref, reactive, watch, onMounted, onUnmounted } from 'vue';
+import { useStorage } from '@vueuse/core';
 import { inspectWindowEval } from '@/utils/utils';
 import { ElMessage } from 'element-plus';
 
 /** ---------------- 全域設定 ---------------- */
-const clickSettings = reactive({
+const clickSettings = useStorage('click-bot-settings', {
   intervalSec: 0, // 一輪結束後的額外間隔（秒）
   randomOffsetSec: 0, // 隨機亂數偏移（秒）
 });
@@ -112,16 +113,19 @@ interface Coord {
   delaySec: number;
 }
 
-const coordCount = ref(1);
-const coords = reactive<Coord[]>([{ x: 0, y: 0, delaySec: 1 }]);
+const coordCount = useStorage('click-bot-coord-count', 1);
+const coords = useStorage<Coord[]>('click-bot-coords', [
+  { x: 0, y: 0, delaySec: 1 },
+]);
 
 /** 動態增減座標組 */
 watch(coordCount, newVal => {
   if (newVal < 1) coordCount.value = 1;
-  const diff = newVal - coords.length;
+  const diff = newVal - coords.value.length;
   if (diff > 0) {
-    for (let i = 0; i < diff; i++) coords.push({ x: 0, y: 0, delaySec: 1 });
-  } else if (diff < 0) coords.splice(newVal);
+    for (let i = 0; i < diff; i++)
+      coords.value.push({ x: 0, y: 0, delaySec: 1 });
+  } else if (diff < 0) coords.value.splice(newVal);
 });
 
 /** ---------------- 滑鼠座標監聽 ---------------- */
@@ -136,9 +140,10 @@ let currentCoordIdx = 0;
 const tabId = chrome.devtools.inspectedWindow.tabId;
 
 const startClickBot = () => {
-  if (isClicking.value || !coords.length) return;
+  console.warn('start click bot~~~', isClicking.value);
   chrome.debugger.attach({ tabId }, '1.3', () => {
     if (chrome.runtime.lastError) {
+      console.error('Mouse Click Error:', chrome.runtime.lastError.message);
       ElMessage.error(chrome.runtime.lastError.message);
       return;
     }
@@ -157,16 +162,16 @@ const stopClickBot = () => {
 
 /** 依序點擊各座標，完成後依設定間隔再次循環 */
 const nextClick = () => {
-  const coord = coords[currentCoordIdx];
+  const coord = coords.value[currentCoordIdx];
   dispatchClick(coord.x, coord.y);
 
   // 計算延遲時間（毫秒）
-  const baseIntervalMs = clickSettings.intervalSec * 1000;
-  const randomMs = Math.random() * clickSettings.randomOffsetSec * 1000;
+  const baseIntervalMs = clickSettings.value.intervalSec * 1000;
+  const randomMs = Math.random() * clickSettings.value.randomOffsetSec * 1000;
   const extraDelayMs = coord.delaySec * 1000;
   const totalDelay = baseIntervalMs + randomMs + extraDelayMs;
 
-  currentCoordIdx = (currentCoordIdx + 1) % coords.length;
+  currentCoordIdx = (currentCoordIdx + 1) % coords.value.length;
   clickTimeout = setTimeout(() => {
     if (isClicking.value) nextClick();
   }, totalDelay);
@@ -208,9 +213,9 @@ const dispatchClick = (x: number, y: number) => {
 /** 注入滑鼠追蹤腳本 (避免頁面刷新後失效) */
 const injectMouseTracker = () => {
   inspectWindowEval(`
-    document.removeEventListener('mousemove', window.__CLICK_BOT_HANDLER__);
+    document.removeEventListener('mousemove', window.__CLICK_BOT_HANDLER__, true);
     window.__CLICK_BOT_HANDLER__ = e => { window.__CLICK_BOT_MOUSE_INFO__ = { x: e.clientX, y: e.clientY }; };
-    document.addEventListener('mousemove', window.__CLICK_BOT_HANDLER__);
+    document.addEventListener('mousemove', window.__CLICK_BOT_HANDLER__, true);
   `);
 };
 

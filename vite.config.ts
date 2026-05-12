@@ -1,7 +1,7 @@
 import { defineConfig, loadEnv } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import { crx } from '@crxjs/vite-plugin';
-import manifest from './src/manifest.json' assert { type: 'json' };
+import manifest from './src/manifest.json' with { type: 'json' };
 import packageJson from './package.json';
 import customRollupConfig from './rollup.config.js';
 import path, { resolve } from 'path';
