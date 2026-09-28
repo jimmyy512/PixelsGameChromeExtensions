@@ -7,7 +7,7 @@ services:
     networks:
       - main-network
   pixel-server-nginx:
-    image: nginx:latest
+    image: nginx:1.29.2
     ports:
       - "127.0.0.1:3101:80"
     volumes:
